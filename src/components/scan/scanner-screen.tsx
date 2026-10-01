@@ -108,13 +108,13 @@ export function ScannerScreen() {
           return;
         }
         if (response.status === 429) {
-          setStatus({ kind: "error", message: "Zu viele Versuche. Kurz warten." });
+          setStatus({ kind: "error", message: "Zu viele Versuche. Bitte kurz warten." });
           return;
         }
-        setStatus({ kind: "error", message: "Prüfung fehlgeschlagen. Erneut versuchen." });
+        setStatus({ kind: "error", message: "Prüfung fehlgeschlagen. Bitte erneut versuchen." });
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
-          setStatus({ kind: "error", message: "Keine Antwort. Erneut versuchen." });
+          setStatus({ kind: "error", message: "Keine Antwort vom Server. Bitte erneut versuchen." });
           return;
         }
         setStatus({ kind: "offline" });
@@ -130,7 +130,7 @@ export function ScannerScreen() {
     if (!nfcSupported() || !window.NDEFReader) {
       setStatus({
         kind: "error",
-        message: "NFC wird auf diesem Gerät nicht unterstützt. QR-Code oder UID nutzen.",
+        message: "NFC wird auf diesem Gerät nicht unterstützt. Bitte QR-Code scannen oder UID eingeben.",
       });
       return;
     }
@@ -143,13 +143,13 @@ export function ScannerScreen() {
       reader.addEventListener("reading", (event) => {
         const uid = extractCardUid(event);
         if (!uid) {
-          setStatus({ kind: "error", message: "Fehler beim Lesen." });
+          setStatus({ kind: "error", message: "Karte konnte nicht gelesen werden." });
           return;
         }
         void verifyUid(uid);
       });
       reader.addEventListener("readingerror", () => {
-        setStatus({ kind: "error", message: "Fehler beim Lesen." });
+        setStatus({ kind: "error", message: "Karte konnte nicht gelesen werden." });
       });
       await reader.scan({ signal: controller.signal });
     } catch (error) {
@@ -158,7 +158,7 @@ export function ScannerScreen() {
       }
       setStatus({
         kind: "error",
-        message: "NFC konnte nicht gestartet werden. HTTPS und Berechtigung prüfen.",
+        message: "NFC konnte nicht gestartet werden. Bitte Berechtigung und HTTPS prüfen.",
       });
     }
   }, [stopQr, verifyUid]);
@@ -208,7 +208,7 @@ export function ScannerScreen() {
         if (!cancelled) {
           setStatus({
             kind: "error",
-            message: "Kamera nicht verfügbar. UID manuell eingeben.",
+            message: "Kamera nicht verfügbar. Bitte UID manuell eingeben.",
           });
         }
       }
@@ -229,7 +229,7 @@ export function ScannerScreen() {
     event.preventDefault();
     const uid = manualUid.trim();
     if (!uid) {
-      setManualError("UID eingeben.");
+      setManualError("Bitte eine UID eingeben.");
       return;
     }
     setManualError(null);
@@ -263,7 +263,7 @@ export function ScannerScreen() {
                   className="size-56 rounded-2xl object-cover ring-4 ring-white/40"
                 />
               ) : null}
-              <p className="text-center text-4xl font-semibold tracking-tight">Bestätigt</p>
+              <p className="text-center text-4xl font-semibold tracking-tight">Ausweis gültig</p>
               <p className="text-center text-2xl">
                 {status.firstName} {status.lastName}
                 <span className="mt-2 block text-lg font-normal opacity-90">{status.role}</span>
@@ -272,33 +272,38 @@ export function ScannerScreen() {
           ) : (
             <>
               <XIcon className="size-24" aria-hidden="true" />
-              <p className="text-center text-4xl font-semibold tracking-tight">Abgelehnt</p>
-              <p className="text-center text-xl">Karte unbekannt oder gesperrt</p>
+              <p className="text-center text-4xl font-semibold tracking-tight">Ausweis ungültig</p>
+              <p className="text-center text-xl">Karte nicht registriert oder gesperrt</p>
             </>
           )}
           <Button variant="secondary" className="min-h-11" onClick={resetNow}>
-            Weiter scannen
+            Nächste Prüfung
           </Button>
         </div>
       ) : (
         <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-6 py-10">
-          <div className="flex flex-col gap-2">
-            <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">
-              {BRAND.club}
-            </p>
+          <div className="flex flex-col gap-3">
+            <Image
+              src="/brand/frc-logo-light.png"
+              alt={BRAND.club}
+              width={138}
+              height={88}
+              priority
+              className="h-10 w-auto"
+            />
             <h1 className="font-heading text-3xl font-semibold tracking-tight">{BRAND.app}</h1>
             <p className="text-muted-foreground">
               {status.kind === "scanning"
-                ? "Scanne…"
+                ? "Karte auflegen…"
                 : status.kind === "qr"
-                  ? "QR-Code ins Bild halten"
+                  ? "QR-Code erfassen"
                   : status.kind === "offline"
-                    ? "Keine Verbindung"
+                    ? "Keine Verbindung zum Server"
                     : status.kind === "error"
                       ? status.message
                       : nfcSupported()
-                        ? "Bereit"
-                        : "NFC nicht unterstützt — QR oder UID nutzen"}
+                        ? "Bereit zum Scannen"
+                        : "NFC nicht verfügbar. QR-Code scannen oder UID eingeben."}
             </p>
           </div>
 
@@ -313,7 +318,7 @@ export function ScannerScreen() {
           <div className="flex flex-col gap-3">
             <Button className="min-h-12 w-full text-base" onClick={() => void startNfc()}>
               <NfcIcon data-icon="inline-start" />
-              Scan starten
+              NFC scannen
             </Button>
             <Button
               variant="outline"
@@ -321,14 +326,14 @@ export function ScannerScreen() {
               onClick={() => void startQr()}
             >
               <QrCodeIcon data-icon="inline-start" />
-              QR scannen
+              QR-Code scannen
             </Button>
           </div>
 
           <form onSubmit={submitManual}>
             <FieldGroup>
               <Field data-invalid={Boolean(manualError) || undefined}>
-                <FieldLabel htmlFor="manual-uid">Karten-UID manuell</FieldLabel>
+                <FieldLabel htmlFor="manual-uid">Karten-UID (manuell)</FieldLabel>
                 <Input
                   id="manual-uid"
                   name="card_uid"

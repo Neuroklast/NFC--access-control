@@ -1,5 +1,7 @@
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/components/admin/login-form";
+import { BRAND } from "@/lib/brand";
 
 export default async function AdminLoginPage({
   searchParams,
@@ -13,8 +15,16 @@ export default async function AdminLoginPage({
     <div className="flex min-h-dvh items-center justify-center px-6 py-10">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Admin</CardTitle>
-          <CardDescription>Kartenverwaltung</CardDescription>
+          <Image
+            src="/brand/frc-logo-light.png"
+            alt={BRAND.club}
+            width={138}
+            height={88}
+            priority
+            className="mb-2 h-10 w-auto"
+          />
+          <CardTitle>Administration</CardTitle>
+          <CardDescription>Bitte anmelden, um Karten zu verwalten.</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm from={from} />

@@ -33,7 +33,7 @@ export function LoginForm({ from }: { from: string }) {
       }
       setError("E-Mail oder Passwort ungültig");
     } catch {
-      setError("Keine Verbindung");
+      setError("Keine Verbindung zum Server");
     } finally {
       setPending(false);
     }

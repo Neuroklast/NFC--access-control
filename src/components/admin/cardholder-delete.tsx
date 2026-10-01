@@ -52,9 +52,9 @@ export function CardholderDelete({
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Karte endgültig löschen?</AlertDialogTitle>
+            <AlertDialogTitle>Karte löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              {`Karte von ${fullName} wird unwiderruflich gelöscht. Zum Sperren stattdessen „Aktiv“ deaktivieren.`}
+              {`Die Karte von ${fullName} wird dauerhaft entfernt. Zum Sperren genügt es, „Aktiv“ zu deaktivieren.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <FieldGroup>

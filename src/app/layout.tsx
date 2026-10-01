@@ -26,15 +26,18 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: `${BRAND.club} — ${BRAND.app}`,
-  description: "Ausweisprüfung für Club-Mitarbeiter",
+  description: "Ausweisprüfung für das Einlasspersonal.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: BRAND.shortName,
   },
   icons: {
-    icon: "/icons/icon.svg",
-    apple: "/icons/icon.svg",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 

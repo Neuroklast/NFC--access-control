@@ -121,7 +121,7 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
             <EmptyTitle>Keine Karten</EmptyTitle>
             <EmptyDescription>
               {items.length === 0
-                ? "Noch keine Karten. Erste Karte anlegen."
+                ? "Noch keine Karten erfasst."
                 : "Keine Treffer für diese Suche."}
             </EmptyDescription>
           </EmptyHeader>

@@ -47,9 +47,9 @@ export default async function EditCardholderPage({
         />
         <Separator />
         <div className="flex flex-col gap-2">
-          <h2 className="font-heading text-lg font-medium">Gefahrenzone</h2>
+          <h2 className="font-heading text-lg font-medium">Karte löschen</h2>
           <p className="text-sm text-muted-foreground">
-            Zum Sperren reicht „Aktiv“ zu deaktivieren. Löschen entfernt die Karte dauerhaft.
+            Zum Sperren genügt es, „Aktiv“ zu deaktivieren. Löschen entfernt die Karte dauerhaft.
           </p>
           <CardholderDelete
             id={row.id}
