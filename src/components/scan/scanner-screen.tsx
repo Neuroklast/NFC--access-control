@@ -1,0 +1,326 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CheckIcon, NfcIcon, QrCodeIcon, XIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { extractCardUid } from "@/lib/nfc/read-card";
+
+type ScanStatus =
+  | { kind: "idle" }
+  | { kind: "scanning" }
+  | { kind: "qr" }
+  | { kind: "granted"; firstName: string; lastName: string; role: string }
+  | { kind: "denied" }
+  | { kind: "error"; message: string }
+  | { kind: "offline" };
+
+const RESET_MS = 4000;
+
+function nfcSupported() {
+  return typeof window !== "undefined" && "NDEFReader" in window;
+}
+
+export function ScannerScreen() {
+  const [status, setStatus] = useState<ScanStatus>({ kind: "idle" });
+  const [manualUid, setManualUid] = useState("");
+  const [manualError, setManualError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const resetRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const qrLoopRef = useRef(false);
+
+  const clearReset = () => {
+    if (resetRef.current !== null) {
+      window.clearTimeout(resetRef.current);
+      resetRef.current = null;
+    }
+  };
+
+  const scheduleReset = useCallback(() => {
+    clearReset();
+    resetRef.current = window.setTimeout(() => {
+      setStatus({ kind: "idle" });
+    }, RESET_MS);
+  }, []);
+
+  const stopQr = useCallback(() => {
+    qrLoopRef.current = false;
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      stopQr();
+      clearReset();
+    };
+  }, [stopQr]);
+
+  const verifyUid = useCallback(
+    async (cardUid: string) => {
+      if (!navigator.onLine) {
+        setStatus({ kind: "offline" });
+        return;
+      }
+      try {
+        const response = await fetch("/api/v1/card-verifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ card_uid: cardUid }),
+        });
+        if (response.status === 200) {
+          const body = (await response.json()) as {
+            granted: boolean;
+            first_name?: string;
+            last_name?: string;
+            role?: string;
+          };
+          if (body.granted && body.first_name && body.last_name && body.role) {
+            setStatus({
+              kind: "granted",
+              firstName: body.first_name,
+              lastName: body.last_name,
+              role: body.role,
+            });
+            scheduleReset();
+            return;
+          }
+        }
+        if (response.status === 403 || response.status === 404) {
+          setStatus({ kind: "denied" });
+          scheduleReset();
+          return;
+        }
+        setStatus({ kind: "error", message: "Prüfung fehlgeschlagen. Erneut versuchen." });
+      } catch {
+        setStatus({ kind: "offline" });
+      }
+    },
+    [scheduleReset],
+  );
+
+  const startNfc = useCallback(async () => {
+    stopQr();
+    if (!nfcSupported() || !window.NDEFReader) {
+      setStatus({
+        kind: "error",
+        message: "NFC wird auf diesem Gerät nicht unterstützt. QR-Code oder UID nutzen.",
+      });
+      return;
+    }
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setStatus({ kind: "scanning" });
+    try {
+      const reader = new window.NDEFReader();
+      reader.addEventListener("reading", (event) => {
+        const uid = extractCardUid(event);
+        if (!uid) {
+          setStatus({ kind: "error", message: "Fehler beim Lesen." });
+          return;
+        }
+        void verifyUid(uid);
+      });
+      reader.addEventListener("readingerror", () => {
+        setStatus({ kind: "error", message: "Fehler beim Lesen." });
+      });
+      await reader.scan({ signal: controller.signal });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+      setStatus({
+        kind: "error",
+        message: "NFC konnte nicht gestartet werden. HTTPS und Berechtigung prüfen.",
+      });
+    }
+  }, [stopQr, verifyUid]);
+
+  const startQr = useCallback(() => {
+    abortRef.current?.abort();
+    stopQr();
+    if (!window.BarcodeDetector) {
+      setStatus({
+        kind: "error",
+        message: "Kamera-QR nicht verfügbar. UID manuell eingeben.",
+      });
+      return;
+    }
+    setStatus({ kind: "qr" });
+  }, [stopQr]);
+
+  useEffect(() => {
+    if (status.kind !== "qr") {
+      return;
+    }
+    let cancelled = false;
+    const run = async () => {
+      if (!window.BarcodeDetector) {
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+        });
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = stream;
+        const video = videoRef.current;
+        if (!video) {
+          return;
+        }
+        video.srcObject = stream;
+        await video.play();
+        const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+        qrLoopRef.current = true;
+        const tick = async () => {
+          if (!qrLoopRef.current || cancelled || !videoRef.current) {
+            return;
+          }
+          try {
+            const codes = await detector.detect(videoRef.current);
+            const value = codes[0]?.rawValue.trim();
+            if (value) {
+              stopQr();
+              await verifyUid(value);
+              return;
+            }
+          } catch {
+            /* keep scanning */
+          }
+          requestAnimationFrame(() => {
+            void tick();
+          });
+        };
+        void tick();
+      } catch {
+        if (!cancelled) {
+          setStatus({
+            kind: "error",
+            message: "Kamera nicht verfügbar. UID manuell eingeben.",
+          });
+        }
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+      stopQr();
+    };
+  }, [status.kind, stopQr, verifyUid]);
+
+  const submitManual = (event: React.FormEvent) => {
+    event.preventDefault();
+    const uid = manualUid.trim();
+    if (!uid) {
+      setManualError("UID eingeben.");
+      return;
+    }
+    setManualError(null);
+    void verifyUid(uid);
+  };
+
+  const result = status.kind === "granted" || status.kind === "denied";
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      {result ? (
+        <div
+          className={
+            status.kind === "granted"
+              ? "flex min-h-dvh flex-col items-center justify-center gap-6 bg-grant px-6 text-grant-foreground"
+              : "flex min-h-dvh flex-col items-center justify-center gap-6 bg-destructive px-6 text-white"
+          }
+          role="status"
+          aria-live="assertive"
+        >
+          {status.kind === "granted" ? (
+            <CheckIcon className="size-24" aria-hidden="true" />
+          ) : (
+            <XIcon className="size-24" aria-hidden="true" />
+          )}
+          <p className="text-center text-4xl font-semibold tracking-tight">
+            {status.kind === "granted" ? "Bestätigt" : "Abgelehnt"}
+          </p>
+          {status.kind === "granted" ? (
+            <p className="text-center text-2xl">
+              {status.firstName} {status.lastName}
+              <span className="mt-2 block text-lg font-normal opacity-90">{status.role}</span>
+            </p>
+          ) : (
+            <p className="text-center text-xl">Karte unbekannt oder gesperrt</p>
+          )}
+        </div>
+      ) : (
+        <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-6 py-10">
+          <div className="flex flex-col gap-2">
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">Club-Ausweis</h1>
+            <p className="text-muted-foreground">
+              {status.kind === "scanning"
+                ? "Scanne…"
+                : status.kind === "qr"
+                  ? "QR-Code ins Bild halten"
+                  : status.kind === "offline"
+                    ? "Keine Verbindung"
+                    : status.kind === "error"
+                      ? status.message
+                      : nfcSupported()
+                        ? "Bereit"
+                        : "NFC nicht unterstützt — QR oder UID nutzen"}
+            </p>
+          </div>
+
+          <video
+            ref={videoRef}
+            className={status.kind === "qr" ? "w-full rounded-xl bg-card" : "hidden"}
+            playsInline
+            muted
+            aria-label="QR-Kamera"
+          />
+
+          <div className="flex flex-col gap-3">
+            <Button className="min-h-12 w-full text-base" onClick={() => void startNfc()}>
+              <NfcIcon data-icon="inline-start" />
+              Scan starten
+            </Button>
+            <Button
+              variant="outline"
+              className="min-h-12 w-full text-base"
+              onClick={() => void startQr()}
+            >
+              <QrCodeIcon data-icon="inline-start" />
+              QR scannen
+            </Button>
+          </div>
+
+          <form onSubmit={submitManual}>
+            <FieldGroup>
+              <Field data-invalid={Boolean(manualError) || undefined}>
+                <FieldLabel htmlFor="manual-uid">Karten-UID manuell</FieldLabel>
+                <Input
+                  id="manual-uid"
+                  name="card_uid"
+                  value={manualUid}
+                  onChange={(event) => setManualUid(event.target.value)}
+                  autoComplete="off"
+                  aria-invalid={Boolean(manualError)}
+                />
+                <FieldError errors={manualError ? [{ message: manualError }] : undefined} />
+              </Field>
+              <Button type="submit" variant="secondary" className="min-h-11">
+                Prüfen
+              </Button>
+            </FieldGroup>
+          </form>
+        </main>
+      )}
+    </div>
+  );
+}
