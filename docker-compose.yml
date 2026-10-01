@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: nfc
-      POSTGRES_PASSWORD: nfc
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD in .env setzen}
       POSTGRES_DB: nfc
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -20,10 +20,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://nfc:nfc@db:5432/nfc
-      SESSION_SECRET: replace-with-at-least-16-chars
-      ADMIN_EMAIL: admin@club.local
-      ADMIN_PASSWORD: changeme
+      DATABASE_URL: postgresql://nfc:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD in .env setzen}@db:5432/nfc
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET in .env setzen}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@club.local}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD in .env setzen}
+      SEED_DEMO: ${SEED_DEMO:-0}
     depends_on:
       db:
         condition: service_healthy

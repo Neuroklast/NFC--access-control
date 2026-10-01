@@ -1,18 +1,12 @@
 import { PrismaClient } from "@prisma/client";
-import { hashPassword } from "../src/lib/auth/password";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = process.env.ADMIN_EMAIL ?? "admin@club.local";
-  const password = process.env.ADMIN_PASSWORD ?? "changeme";
-
-  const passwordHash = await hashPassword(password);
-  await prisma.adminUser.upsert({
-    where: { email },
-    update: {},
-    create: { email, passwordHash },
-  });
+  if (process.env.SEED_DEMO !== "1") {
+    console.log("seed: SEED_DEMO!=1, nur Demo-Karten werden uebersprungen");
+    return;
+  }
 
   await prisma.cardholder.upsert({
     where: { cardUid: "DEMO-ACTIVE" },

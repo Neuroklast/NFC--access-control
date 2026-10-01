@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth/session";
-import { cardholderPatchSchema, serializeCardholder } from "@/lib/cardholders/schema";
+import { cardholderPatchSchema, cardholderSelect, serializeCardholder } from "@/lib/cardholders/schema";
 import { prisma } from "@/lib/db/prisma";
 import { problemResponse } from "@/lib/http/problem";
 
@@ -20,7 +20,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", instance(id));
   }
 
-  const row = await prisma.cardholder.findUnique({ where: { id } });
+  const row = await prisma.cardholder.findUnique({ where: { id }, select: cardholderSelect });
   if (!row) {
     return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
   }
@@ -54,7 +54,11 @@ export async function PATCH(request: Request, context: RouteContext) {
   if (parsed.data.is_active !== undefined) data.isActive = parsed.data.is_active;
 
   try {
-    const updated = await prisma.cardholder.update({ where: { id }, data });
+    const updated = await prisma.cardholder.update({
+      where: { id },
+      data,
+      select: cardholderSelect,
+    });
     return Response.json(serializeCardholder(updated));
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {

@@ -42,6 +42,18 @@ export const cardholderPatchSchema = z
   })
   .strict();
 
+export const cardholderSelect = {
+  id: true,
+  cardUid: true,
+  firstName: true,
+  lastName: true,
+  role: true,
+  isActive: true,
+  photoUpdatedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 export function serializeCardholder(row: {
   id: string;
   cardUid: string;
@@ -49,6 +61,7 @@ export function serializeCardholder(row: {
   lastName: string;
   role: string;
   isActive: boolean;
+  photoUpdatedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -59,6 +72,7 @@ export function serializeCardholder(row: {
     last_name: row.lastName,
     role: row.role,
     is_active: row.isActive,
+    has_photo: row.photoUpdatedAt !== null,
     created_at: row.createdAt.toISOString(),
     updated_at: row.updatedAt.toISOString(),
   };

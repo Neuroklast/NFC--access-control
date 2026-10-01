@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { clientIp, problemResponse } from "@/lib/http/problem";
 import { rateLimit } from "@/lib/http/rate-limit";
 import { verifyCardBodySchema } from "@/lib/cardholders/schema";
+import { createPhotoToken } from "@/lib/photos/token";
 import { verifyCard } from "@/lib/verify/verify-card";
 
 export const runtime = "nodejs";
@@ -30,16 +31,22 @@ export async function POST(request: Request) {
   const row = await prisma.cardholder.findUnique({
     where: { cardUid: parsed.data.card_uid },
     select: {
+      id: true,
       firstName: true,
       lastName: true,
       role: true,
       isActive: true,
+      photoUpdatedAt: true,
     },
   });
 
   const result = verifyCard(row);
   if (result.granted) {
-    return Response.json(result);
+    const photoUrl =
+      row?.photoUpdatedAt !== null && row !== null
+        ? `/api/v1/cardholders/${row.id}/photo?t=${await createPhotoToken(row.id)}`
+        : null;
+    return Response.json({ ...result, photo_url: photoUrl });
   }
   if (result.reason === "unknown") {
     return problemResponse(404, "Unknown card", "Karte unbekannt.", INSTANCE);

@@ -17,8 +17,11 @@ Karten existieren nur in Postgres. Verwaltung kann Inhaber nicht anlegen, sperre
 - [ ] Given leere DB, when Liste, then Empty-State mit CTA „Karte anlegen“, keine leere Tabelle.
 - [ ] Given gültige Felder, when Anlegen, then Row existiert; Scanner mit dieser UID → Grant.
 - [ ] Given doppelte UID, when Anlegen/Ändern, then 409 am Feld `card_uid`, kein Partial-Write.
-- [ ] Given aktive Karte, when Deaktivieren, then Scanner → Denied ohne Namen.
-- [ ] Given Löschen, when Confirm mit vollem Namen, then Row weg; Abbrechen ändert nichts.
+- [ ] Given aktive Karte, when Sperren in der Liste, then Scanner → Denied ohne Namen.
+- [ ] Given Löschen, when Confirm mit Nachnamen, then Row weg; Abbrechen ändert nichts; Löschen nur auf der Edit-Seite.
+- [ ] Given Foto, when Upload, then Scanner-Grant zeigt das Bild (signierte URL, 60 s).
+- [ ] Given falsches aktuelles Passwort, when Passwort ändern, then 403, keine Änderung.
+- [ ] Given Passwort ≥ 12 Zeichen, when ändern, then 204 und neuer Login funktioniert.
 - [ ] Denied path: Scanner-Session darf Admin-APIs nicht aufrufen (kein Cookie → 401).
 - [ ] Empty/error: Netzwerkfehler an Formular + Retry; kein Silent Fail.
 - [ ] Login: `autocomplete="username"` / `current-password`; Submit-Pending sichtbar; Inputs nicht `disabled` während Submit.

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CheckIcon, NfcIcon, QrCodeIcon, XIcon } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -11,12 +12,19 @@ type ScanStatus =
   | { kind: "idle" }
   | { kind: "scanning" }
   | { kind: "qr" }
-  | { kind: "granted"; firstName: string; lastName: string; role: string }
+  | {
+      kind: "granted";
+      firstName: string;
+      lastName: string;
+      role: string;
+      photoUrl: string | null;
+    }
   | { kind: "denied" }
   | { kind: "error"; message: string }
   | { kind: "offline" };
 
-const RESET_MS = 4000;
+const RESET_MS = 5000;
+const VERIFY_TIMEOUT_MS = 6000;
 
 function nfcSupported() {
   return typeof window !== "undefined" && "NDEFReader" in window;
@@ -29,8 +37,7 @@ export function ScannerScreen() {
   const abortRef = useRef<AbortController | null>(null);
   const resetRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const qrLoopRef = useRef(false);
+  const qrScannerRef = useRef<{ destroy: () => void } | null>(null);
 
   const clearReset = () => {
     if (resetRef.current !== null) {
@@ -47,9 +54,8 @@ export function ScannerScreen() {
   }, []);
 
   const stopQr = useCallback(() => {
-    qrLoopRef.current = false;
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
+    qrScannerRef.current?.destroy();
+    qrScannerRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -66,11 +72,14 @@ export function ScannerScreen() {
         setStatus({ kind: "offline" });
         return;
       }
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), VERIFY_TIMEOUT_MS);
       try {
         const response = await fetch("/api/v1/card-verifications", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ card_uid: cardUid }),
+          signal: controller.signal,
         });
         if (response.status === 200) {
           const body = (await response.json()) as {
@@ -78,6 +87,7 @@ export function ScannerScreen() {
             first_name?: string;
             last_name?: string;
             role?: string;
+            photo_url?: string | null;
           };
           if (body.granted && body.first_name && body.last_name && body.role) {
             setStatus({
@@ -85,6 +95,7 @@ export function ScannerScreen() {
               firstName: body.first_name,
               lastName: body.last_name,
               role: body.role,
+              photoUrl: body.photo_url ?? null,
             });
             scheduleReset();
             return;
@@ -95,9 +106,19 @@ export function ScannerScreen() {
           scheduleReset();
           return;
         }
+        if (response.status === 429) {
+          setStatus({ kind: "error", message: "Zu viele Versuche. Kurz warten." });
+          return;
+        }
         setStatus({ kind: "error", message: "Prüfung fehlgeschlagen. Erneut versuchen." });
-      } catch {
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          setStatus({ kind: "error", message: "Keine Antwort. Erneut versuchen." });
+          return;
+        }
         setStatus({ kind: "offline" });
+      } finally {
+        window.clearTimeout(timeout);
       }
     },
     [scheduleReset],
@@ -144,13 +165,6 @@ export function ScannerScreen() {
   const startQr = useCallback(() => {
     abortRef.current?.abort();
     stopQr();
-    if (!window.BarcodeDetector) {
-      setStatus({
-        kind: "error",
-        message: "Kamera-QR nicht verfügbar. UID manuell eingeben.",
-      });
-      return;
-    }
     setStatus({ kind: "qr" });
   }, [stopQr]);
 
@@ -160,46 +174,35 @@ export function ScannerScreen() {
     }
     let cancelled = false;
     const run = async () => {
-      if (!window.BarcodeDetector) {
+      const video = videoRef.current;
+      if (!video) {
         return;
       }
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
+        const { default: QrScanner } = await import("qr-scanner");
         if (cancelled) {
-          stream.getTracks().forEach((track) => track.stop());
           return;
         }
-        streamRef.current = stream;
-        const video = videoRef.current;
-        if (!video) {
-          return;
-        }
-        video.srcObject = stream;
-        await video.play();
-        const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
-        qrLoopRef.current = true;
-        const tick = async () => {
-          if (!qrLoopRef.current || cancelled || !videoRef.current) {
-            return;
-          }
-          try {
-            const codes = await detector.detect(videoRef.current);
-            const value = codes[0]?.rawValue.trim();
-            if (value) {
-              stopQr();
-              await verifyUid(value);
-              return;
-            }
-          } catch {
-            /* keep scanning */
-          }
-          requestAnimationFrame(() => {
-            void tick();
-          });
-        };
-        void tick();
+        QrScanner.WORKER_PATH = "/qr-scanner-worker.min.js";
+        const scanner = new QrScanner(
+          video,
+          (result) => {
+            void verifyUid(result.data.trim());
+            stopQr();
+          },
+          {
+            onDecodeError: () => {
+              /* keep scanning */
+            },
+            preferredCamera: "environment",
+            maxScansPerSecond: 10,
+            highlightScanRegion: false,
+            highlightCodeOutline: false,
+            returnDetailedScanResult: true,
+          },
+        );
+        qrScannerRef.current = scanner;
+        await scanner.start();
       } catch {
         if (!cancelled) {
           setStatus({
@@ -235,27 +238,37 @@ export function ScannerScreen() {
         <div
           className={
             status.kind === "granted"
-              ? "flex min-h-dvh flex-col items-center justify-center gap-6 bg-grant px-6 text-grant-foreground"
-              : "flex min-h-dvh flex-col items-center justify-center gap-6 bg-destructive px-6 text-white"
+              ? "flex min-h-dvh flex-col items-center justify-center gap-6 bg-grant px-6 py-10 text-grant-foreground"
+              : "flex min-h-dvh flex-col items-center justify-center gap-6 bg-destructive px-6 py-10 text-white"
           }
           role="status"
           aria-live="assertive"
         >
           {status.kind === "granted" ? (
-            <CheckIcon className="size-24" aria-hidden="true" />
+            <>
+              <CheckIcon className="size-20" aria-hidden="true" />
+              {status.photoUrl ? (
+                <Image
+                  src={status.photoUrl}
+                  alt=""
+                  width={220}
+                  height={220}
+                  unoptimized
+                  className="size-56 rounded-2xl object-cover ring-4 ring-white/40"
+                />
+              ) : null}
+              <p className="text-center text-4xl font-semibold tracking-tight">Bestätigt</p>
+              <p className="text-center text-2xl">
+                {status.firstName} {status.lastName}
+                <span className="mt-2 block text-lg font-normal opacity-90">{status.role}</span>
+              </p>
+            </>
           ) : (
-            <XIcon className="size-24" aria-hidden="true" />
-          )}
-          <p className="text-center text-4xl font-semibold tracking-tight">
-            {status.kind === "granted" ? "Bestätigt" : "Abgelehnt"}
-          </p>
-          {status.kind === "granted" ? (
-            <p className="text-center text-2xl">
-              {status.firstName} {status.lastName}
-              <span className="mt-2 block text-lg font-normal opacity-90">{status.role}</span>
-            </p>
-          ) : (
-            <p className="text-center text-xl">Karte unbekannt oder gesperrt</p>
+            <>
+              <XIcon className="size-24" aria-hidden="true" />
+              <p className="text-center text-4xl font-semibold tracking-tight">Abgelehnt</p>
+              <p className="text-center text-xl">Karte unbekannt oder gesperrt</p>
+            </>
           )}
         </div>
       ) : (

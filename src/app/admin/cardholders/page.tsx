@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { CardholderList } from "@/components/admin/cardholder-list";
 import { getSession } from "@/lib/auth/session";
-import { serializeCardholder } from "@/lib/cardholders/schema";
+import { cardholderSelect, serializeCardholder } from "@/lib/cardholders/schema";
 import { prisma } from "@/lib/db/prisma";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,7 @@ export default async function CardholdersPage() {
   }
 
   const rows = await prisma.cardholder.findMany({
+    select: cardholderSelect,
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });
 

@@ -2,19 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { PlusIcon, SearchIcon, Trash2Icon } from "lucide-react";
+import { LockIcon, PlusIcon, SearchIcon, UnlockIcon } from "lucide-react";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,12 +32,38 @@ export type CardholderRow = {
   last_name: string;
   role: string;
   is_active: boolean;
+  has_photo: boolean;
 };
+
+function Photo({ row, size }: { row: CardholderRow; size: number }) {
+  if (!row.has_photo) {
+    return (
+      <div
+        className="flex shrink-0 items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground"
+        style={{ width: size, height: size }}
+        aria-hidden="true"
+      >
+        —
+      </div>
+    );
+  }
+  return (
+    <Image
+      src={`/api/v1/cardholders/${row.id}/photo`}
+      alt=""
+      width={size}
+      height={size}
+      unoptimized
+      className="shrink-0 rounded-lg object-cover"
+      style={{ width: size, height: size }}
+    />
+  );
+}
 
 export function CardholderList({ items }: { items: CardholderRow[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [pendingDelete, setPendingDelete] = useState<CardholderRow | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -58,19 +75,25 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
     );
   }, [items, query]);
 
-  async function confirmDelete() {
-    if (!pendingDelete) {
-      return;
+  async function toggleActive(row: CardholderRow) {
+    setPendingId(row.id);
+    try {
+      const response = await fetch(`/api/v1/cardholders/${row.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !row.is_active }),
+      });
+      if (response.ok) {
+        toast.success(row.is_active ? "Karte gesperrt" : "Karte aktiviert");
+        router.refresh();
+        return;
+      }
+      toast.error("Ändern fehlgeschlagen");
+    } catch {
+      toast.error("Keine Verbindung");
+    } finally {
+      setPendingId(null);
     }
-    const target = pendingDelete;
-    setPendingDelete(null);
-    const response = await fetch(`/api/v1/cardholders/${target.id}`, { method: "DELETE" });
-    if (response.status === 204) {
-      toast.success("Karte gelöscht");
-      router.refresh();
-      return;
-    }
-    toast.error("Löschen fehlgeschlagen");
   }
 
   return (
@@ -114,6 +137,7 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Foto</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>UID</TableHead>
                   <TableHead>Rolle</TableHead>
@@ -124,6 +148,9 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
               <TableBody>
                 {filtered.map((row) => (
                   <TableRow key={row.id}>
+                    <TableCell>
+                      <Photo row={row} size={40} />
+                    </TableCell>
                     <TableCell>
                       {row.first_name} {row.last_name}
                     </TableCell>
@@ -136,16 +163,25 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" render={<Link href={`/admin/cardholders/${row.id}`} />}>
-                          Bearbeiten
+                        <Button
+                          variant={row.is_active ? "outline" : "default"}
+                          size="sm"
+                          disabled={pendingId === row.id}
+                          onClick={() => void toggleActive(row)}
+                        >
+                          {row.is_active ? (
+                            <LockIcon data-icon="inline-start" />
+                          ) : (
+                            <UnlockIcon data-icon="inline-start" />
+                          )}
+                          {row.is_active ? "Sperren" : "Aktivieren"}
                         </Button>
                         <Button
-                          variant="destructive"
-                          size="icon"
-                          aria-label={`${row.first_name} ${row.last_name} löschen`}
-                          onClick={() => setPendingDelete(row)}
+                          variant="outline"
+                          size="sm"
+                          render={<Link href={`/admin/cardholders/${row.id}`} />}
                         >
-                          <Trash2Icon />
+                          Bearbeiten
                         </Button>
                       </div>
                     </TableCell>
@@ -157,29 +193,38 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
 
           <div className="flex flex-col gap-3 md:hidden">
             {filtered.map((row) => (
-              <div key={row.id} className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
+              <div
+                key={row.id}
+                className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10"
+              >
+                <div className="flex items-start gap-3">
+                  <Photo row={row} size={48} />
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium">
                       {row.first_name} {row.last_name}
                     </p>
                     <p className="font-mono text-sm text-muted-foreground">{row.card_uid}</p>
+                    <p className="text-sm text-muted-foreground">{row.role}</p>
                   </div>
                   <Badge variant={row.is_active ? "secondary" : "destructive"}>
                     {row.is_active ? "Aktiv" : "Gesperrt"}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">{row.role}</p>
                 <div className="flex gap-2">
-                  <Button className="flex-1" variant="outline" render={<Link href={`/admin/cardholders/${row.id}`} />}>
-                    Bearbeiten
+                  <Button
+                    className="flex-1"
+                    variant={row.is_active ? "outline" : "default"}
+                    disabled={pendingId === row.id}
+                    onClick={() => void toggleActive(row)}
+                  >
+                    {row.is_active ? "Sperren" : "Aktivieren"}
                   </Button>
                   <Button
-                    variant="destructive"
                     className="flex-1"
-                    onClick={() => setPendingDelete(row)}
+                    variant="outline"
+                    render={<Link href={`/admin/cardholders/${row.id}`} />}
                   >
-                    Löschen
+                    Bearbeiten
                   </Button>
                 </div>
               </div>
@@ -187,25 +232,6 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
           </div>
         </>
       )}
-
-      <AlertDialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && setPendingDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Karte löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingDelete
-                ? `Karte von ${pendingDelete.first_name} ${pendingDelete.last_name} unwiderruflich löschen?`
-                : null}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => void confirmDelete()}>
-              Löschen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

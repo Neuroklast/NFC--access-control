@@ -38,6 +38,10 @@
 | F10 | UID am Admin per NFC/QR | could | later | sonst Clipboard/Tipp |
 | F11 | Mehrere Admin-Accounts | could | later | MVP: ein Seed-Admin |
 | F12 | Passwort-Reset per E-Mail | could | later | MVP: Änderung nur eingeloggt |
+| F13 | Mitarbeiterfoto am Scanner | must | done | signierte URL, 60 s |
+| F14 | Passwort ändern (eingeloggt) | must | done | min. 12 Zeichen |
+| F15 | Backup/Restore | must | done | pg_dump, Retention |
+| F16 | CI (lint/typecheck/test/build) | must | done | GitHub Actions |
 
 ## 4. Roles & permissions
 

@@ -16,9 +16,10 @@ if errorlevel 1 (
   exit /b 1
 )
 
+set "NEW_ADMIN_PW="
 if not exist ".env" (
-  echo [INFO] .env aus .env.example anlegen
-  copy /y ".env.example" ".env" >nul
+  echo [INFO] .env mit Zufallswerten erzeugen...
+  for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\init-env.ps1"`) do set "NEW_ADMIN_PW=%%P"
 )
 
 echo [INFO] Container bauen und starten...
@@ -47,15 +48,14 @@ echo [OK] App laeuft.
 :seed
 where npm >nul 2>nul
 if errorlevel 1 (
-  echo [WARN] npm nicht gefunden - Seed uebersprungen. Admin/Demo-Karten fehlen ggf.
+  echo [WARN] npm nicht gefunden - Seed uebersprungen.
   goto done
 )
 if not exist "node_modules" (
   echo [INFO] npm install ...
   call npm install
 )
-echo [INFO] Migrationen anwenden und Demo-Daten seeden...
-call npx prisma migrate deploy
+echo [INFO] Demo-Daten seeden (SEED_DEMO=1)...
 call npx prisma db seed
 
 :done
@@ -63,7 +63,13 @@ echo.
 echo ============================================
 echo  Scanner : http://localhost:3000
 echo  Admin   : http://localhost:3000/admin/login
-echo  Login   : admin@club.local / changeme
+if defined NEW_ADMIN_PW (
+  echo  Login   : admin@club.local
+  echo  Passwort: !NEW_ADMIN_PW!
+  echo  ^(Passwort steht auch in .env - bitte nach dem Login aendern^)
+) else (
+  echo  Login   : siehe ADMIN_EMAIL / ADMIN_PASSWORD in .env
+)
 echo  Demo    : DEMO-ACTIVE (gruen) / DEMO-BLOCKED (rot)
 echo ============================================
 echo  Stoppen : docker compose down

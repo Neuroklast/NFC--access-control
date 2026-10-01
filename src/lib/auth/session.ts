@@ -1,6 +1,7 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
+import { secretKey } from "@/lib/auth/secret";
 
 export { SESSION_COOKIE };
 const MAX_AGE_SECONDS = 60 * 60 * 12;
@@ -9,14 +10,6 @@ export type SessionPayload = {
   sub: string;
   email: string;
 };
-
-function secretKey(): Uint8Array {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 16) {
-    throw new Error("SESSION_SECRET must be at least 16 characters");
-  }
-  return new TextEncoder().encode(secret);
-}
 
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
   return new SignJWT(payload)

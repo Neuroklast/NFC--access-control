@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth/session";
-import { cardholderCreateSchema, serializeCardholder } from "@/lib/cardholders/schema";
+import { cardholderCreateSchema, cardholderSelect, serializeCardholder } from "@/lib/cardholders/schema";
 import { prisma } from "@/lib/db/prisma";
 import { problemResponse } from "@/lib/http/problem";
 
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
           ],
         }
       : undefined,
+    select: cardholderSelect,
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });
 
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
         role: parsed.data.role,
         isActive: parsed.data.is_active,
       },
+      select: cardholderSelect,
     });
     return Response.json(serializeCardholder(created), {
       status: 201,

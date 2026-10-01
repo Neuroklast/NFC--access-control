@@ -20,6 +20,9 @@ export function AdminHeader({ email }: { email: string }) {
       </Link>
       <div className="flex items-center gap-3">
         <span className="hidden text-sm text-muted-foreground sm:inline">{email}</span>
+        <Button variant="outline" render={<Link href="/admin/password" />}>
+          Passwort
+        </Button>
         <Button variant="outline" onClick={() => void logout()}>
           Abmelden
         </Button>

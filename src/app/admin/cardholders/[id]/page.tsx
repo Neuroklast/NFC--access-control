@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AdminHeader } from "@/components/admin/admin-header";
+import { CardholderDelete } from "@/components/admin/cardholder-delete";
 import { CardholderForm } from "@/components/admin/cardholder-form";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { getSession } from "@/lib/auth/session";
+import { cardholderSelect } from "@/lib/cardholders/schema";
 import { prisma } from "@/lib/db/prisma";
 
 export default async function EditCardholderPage({
@@ -17,7 +20,7 @@ export default async function EditCardholderPage({
   }
 
   const { id } = await params;
-  const row = await prisma.cardholder.findUnique({ where: { id } });
+  const row = await prisma.cardholder.findUnique({ where: { id }, select: cardholderSelect });
   if (!row) {
     notFound();
   }
@@ -34,6 +37,7 @@ export default async function EditCardholderPage({
         </div>
         <CardholderForm
           id={row.id}
+          hasPhoto={row.photoUpdatedAt !== null}
           initial={{
             card_uid: row.cardUid,
             first_name: row.firstName,
@@ -42,6 +46,18 @@ export default async function EditCardholderPage({
             is_active: row.isActive,
           }}
         />
+        <Separator />
+        <div className="flex flex-col gap-2">
+          <h2 className="font-heading text-lg font-medium">Gefahrenzone</h2>
+          <p className="text-sm text-muted-foreground">
+            Zum Sperren reicht „Aktiv“ zu deaktivieren. Löschen entfernt die Karte dauerhaft.
+          </p>
+          <CardholderDelete
+            id={row.id}
+            fullName={`${row.firstName} ${row.lastName}`}
+            lastName={row.lastName}
+          />
+        </div>
       </main>
     </div>
   );

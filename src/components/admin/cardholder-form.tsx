@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { CARDHOLDER_ROLES } from "@/lib/cardholders/schema";
+import { downscaleImage } from "@/lib/photos/downscale";
 
 export type CardholderFormValues = {
   card_uid: string;
@@ -20,13 +22,36 @@ export type CardholderFormValues = {
 export function CardholderForm({
   id,
   initial,
+  hasPhoto = false,
 }: {
   id?: string;
   initial?: CardholderFormValues;
+  hasPhoto?: boolean;
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+
+  useEffect(() => {
+    if (!preview) {
+      return;
+    }
+    return () => URL.revokeObjectURL(preview);
+  }, [preview]);
+
+  async function uploadPhoto(cardholderId: string, selected: File) {
+    const blob = await downscaleImage(selected);
+    const response = await fetch(`/api/v1/cardholders/${cardholderId}/photo`, {
+      method: "PUT",
+      headers: { "Content-Type": "image/jpeg" },
+      body: blob,
+    });
+    if (!response.ok) {
+      toast.error("Foto konnte nicht gespeichert werden");
+    }
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,6 +73,10 @@ export function CardholderForm({
         body: JSON.stringify(payload),
       });
       if (response.status === 201 || response.status === 200) {
+        const saved = (await response.json()) as { id: string };
+        if (file) {
+          await uploadPhoto(saved.id, file);
+        }
         toast.success(id ? "Karte gespeichert" : "Karte angelegt");
         router.push("/admin/cardholders");
         router.refresh();
@@ -111,6 +140,38 @@ export function CardholderForm({
             className="size-4"
           />
           <FieldLabel htmlFor="is_active">Aktiv</FieldLabel>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="photo">Foto (optional)</FieldLabel>
+          <div className="flex items-center gap-4">
+            {preview ? (
+              <Image
+                src={preview}
+                alt="Vorschau"
+                width={64}
+                height={64}
+                unoptimized
+                className="size-16 rounded-lg object-cover"
+              />
+            ) : id && hasPhoto ? (
+              <Image
+                src={`/api/v1/cardholders/${id}/photo`}
+                alt="Aktuelles Foto"
+                width={64}
+                height={64}
+                unoptimized
+                className="size-16 rounded-lg object-cover"
+              />
+            ) : null}
+            <input
+              id="photo"
+              name="photo"
+              type="file"
+              accept="image/*"
+              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              className="text-sm text-muted-foreground file:mr-3 file:rounded-lg file:border file:border-input file:bg-transparent file:px-3 file:py-1.5 file:text-sm"
+            />
+          </div>
         </Field>
         {error ? <FieldError>{error}</FieldError> : null}
         <Button type="submit" className="min-h-11" disabled={pending}>
