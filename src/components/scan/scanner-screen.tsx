@@ -240,59 +240,59 @@ export function ScannerScreen() {
   const result = status.kind === "granted" || status.kind === "denied";
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+    <div className="flex h-full flex-col overflow-hidden bg-background text-foreground">
       {result ? (
         <div
           className={
             status.kind === "granted"
-              ? "flex min-h-dvh flex-col items-center justify-center gap-6 bg-grant px-6 py-10 text-grant-foreground"
-              : "flex min-h-dvh flex-col items-center justify-center gap-6 bg-destructive px-6 py-10 text-white"
+              ? "flex h-full flex-col items-center justify-center gap-4 overflow-hidden bg-grant px-6 py-6 text-grant-foreground"
+              : "flex h-full flex-col items-center justify-center gap-4 overflow-hidden bg-destructive px-6 py-6 text-white"
           }
           role="status"
           aria-live="assertive"
         >
           {status.kind === "granted" ? (
             <>
-              <CheckIcon className="size-20" aria-hidden="true" />
+              <CheckIcon className="size-14" aria-hidden="true" />
               {status.photoUrl ? (
                 <Image
                   src={status.photoUrl}
                   alt=""
-                  width={220}
-                  height={220}
+                  width={176}
+                  height={176}
                   unoptimized
-                  className="size-56 rounded-2xl object-cover ring-4 ring-white/40"
+                  className="size-40 rounded-2xl object-cover ring-4 ring-white/40"
                 />
               ) : null}
-              <p className="text-center text-4xl font-semibold tracking-tight">Ausweis gültig</p>
-              <p className="text-center text-2xl">
+              <p className="text-center text-3xl font-semibold tracking-tight">Ausweis gültig</p>
+              <p className="text-center text-xl">
                 {status.firstName} {status.lastName}
-                <span className="mt-2 block text-lg font-normal opacity-90">{status.role}</span>
+                <span className="mt-1 block text-base font-normal opacity-90">{status.role}</span>
               </p>
             </>
           ) : (
             <>
-              <XIcon className="size-24" aria-hidden="true" />
-              <p className="text-center text-4xl font-semibold tracking-tight">Ausweis ungültig</p>
-              <p className="text-center text-xl">Karte nicht registriert oder gesperrt</p>
+              <XIcon className="size-16" aria-hidden="true" />
+              <p className="text-center text-3xl font-semibold tracking-tight">Ausweis ungültig</p>
+              <p className="text-center text-lg">Karte nicht registriert oder gesperrt</p>
             </>
           )}
-          <Button variant="secondary" className="min-h-11" onClick={resetNow}>
+          <Button variant="secondary" className="mt-2 min-h-11" onClick={resetNow}>
             Nächste Prüfung
           </Button>
         </div>
       ) : (
-        <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-6 py-10">
-          <div className="flex flex-col gap-3">
+        <main className="mx-auto flex h-full w-full max-w-md flex-col gap-4 px-6 py-6">
+          <div className="flex shrink-0 flex-col gap-1">
             <Image
               src="/brand/frc-logo-light.png"
               alt={BRAND.club}
-              width={100}
-              height={64}
+              width={72}
+              height={46}
               priority
             />
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">{BRAND.app}</h1>
-            <p className="text-muted-foreground">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">{BRAND.app}</h1>
+            <p className="text-sm text-muted-foreground">
               {status.kind === "scanning"
                 ? "Karte auflegen…"
                 : status.kind === "qr"
@@ -307,15 +307,21 @@ export function ScannerScreen() {
             </p>
           </div>
 
-          <video
-            ref={videoRef}
-            className={status.kind === "qr" ? "w-full rounded-xl bg-card" : "hidden"}
-            playsInline
-            muted
-            aria-label="QR-Kamera"
-          />
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <video
+              ref={videoRef}
+              className={
+                status.kind === "qr"
+                  ? "max-h-full w-full rounded-xl bg-card object-cover"
+                  : "hidden"
+              }
+              playsInline
+              muted
+              aria-label="QR-Kamera"
+            />
+          </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex shrink-0 flex-col gap-2">
             <Button className="min-h-12 w-full text-base" onClick={() => void startNfc()}>
               <NfcIcon data-icon="inline-start" />
               NFC scannen
@@ -329,19 +335,15 @@ export function ScannerScreen() {
               QR-Code scannen
             </Button>
             {!showManual ? (
-              <Button
-                variant="ghost"
-                className="min-h-11"
-                onClick={() => setShowManual(true)}
-              >
+              <Button variant="ghost" className="min-h-11" onClick={() => setShowManual(true)}>
                 UID manuell eingeben
               </Button>
             ) : null}
           </div>
 
           {showManual ? (
-            <form onSubmit={submitManual}>
-              <FieldGroup>
+            <form onSubmit={submitManual} className="shrink-0">
+              <FieldGroup className="gap-3">
                 <Field data-invalid={Boolean(manualError) || undefined}>
                   <FieldLabel htmlFor="manual-uid">Karten-UID</FieldLabel>
                   <Input

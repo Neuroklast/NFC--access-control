@@ -57,10 +57,10 @@ export default function RootLayout({
       lang="de"
       className={`${sans.variable} ${heading.variable} ${mono.variable} dark h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex h-dvh flex-col overflow-hidden">
         <Providers>
           <DemoBanner />
-          {children}
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</div>
           <PwaRegister />
         </Providers>
       </body>

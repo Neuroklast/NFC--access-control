@@ -12,7 +12,7 @@ export default async function AdminLoginPage({
   const from = params.from && params.from.startsWith("/admin") ? params.from : "/admin/cardholders";
 
   return (
-    <div className="flex min-h-dvh items-center justify-center px-6 py-10">
+    <div className="flex min-h-full items-center justify-center px-6 py-10">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <Image
