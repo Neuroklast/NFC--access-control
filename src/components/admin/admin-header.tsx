@@ -18,13 +18,7 @@ export function AdminHeader({ email }: { email: string }) {
   return (
     <header className="flex items-center justify-between gap-4 border-b px-6 py-4">
       <Link href="/admin/cardholders" className="flex items-center gap-3">
-        <Image
-          src="/brand/frc-logo-light.png"
-          alt={BRAND.club}
-          width={138}
-          height={88}
-          className="h-7 w-auto"
-        />
+        <Image src="/brand/frc-logo-light.png" alt={BRAND.club} width={44} height={28} />
         <span className="font-heading text-sm font-medium">Kartenverwaltung</span>
       </Link>
       <div className="flex items-center gap-3">

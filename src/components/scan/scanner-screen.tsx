@@ -286,10 +286,9 @@ export function ScannerScreen() {
             <Image
               src="/brand/frc-logo-light.png"
               alt={BRAND.club}
-              width={138}
-              height={88}
+              width={100}
+              height={64}
               priority
-              className="h-10 w-auto"
             />
             <h1 className="font-heading text-3xl font-semibold tracking-tight">{BRAND.app}</h1>
             <p className="text-muted-foreground">

@@ -18,10 +18,10 @@ export default async function AdminLoginPage({
           <Image
             src="/brand/frc-logo-light.png"
             alt={BRAND.club}
-            width={138}
-            height={88}
+            width={100}
+            height={64}
             priority
-            className="mb-2 h-10 w-auto"
+            className="mb-2"
           />
           <CardTitle>Administration</CardTitle>
           <CardDescription>Bitte anmelden, um Karten zu verwalten.</CardDescription>
