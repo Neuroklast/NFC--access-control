@@ -35,6 +35,7 @@ export function ScannerScreen() {
   const [status, setStatus] = useState<ScanStatus>({ kind: "idle" });
   const [manualUid, setManualUid] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
+  const [showManual, setShowManual] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const resetRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -327,27 +328,39 @@ export function ScannerScreen() {
               <QrCodeIcon data-icon="inline-start" />
               QR-Code scannen
             </Button>
+            {!showManual ? (
+              <Button
+                variant="ghost"
+                className="min-h-11"
+                onClick={() => setShowManual(true)}
+              >
+                UID manuell eingeben
+              </Button>
+            ) : null}
           </div>
 
-          <form onSubmit={submitManual}>
-            <FieldGroup>
-              <Field data-invalid={Boolean(manualError) || undefined}>
-                <FieldLabel htmlFor="manual-uid">Karten-UID (manuell)</FieldLabel>
-                <Input
-                  id="manual-uid"
-                  name="card_uid"
-                  value={manualUid}
-                  onChange={(event) => setManualUid(event.target.value)}
-                  autoComplete="off"
-                  aria-invalid={Boolean(manualError)}
-                />
-                <FieldError errors={manualError ? [{ message: manualError }] : undefined} />
-              </Field>
-              <Button type="submit" variant="secondary" className="min-h-11">
-                Prüfen
-              </Button>
-            </FieldGroup>
-          </form>
+          {showManual ? (
+            <form onSubmit={submitManual}>
+              <FieldGroup>
+                <Field data-invalid={Boolean(manualError) || undefined}>
+                  <FieldLabel htmlFor="manual-uid">Karten-UID</FieldLabel>
+                  <Input
+                    id="manual-uid"
+                    name="card_uid"
+                    value={manualUid}
+                    onChange={(event) => setManualUid(event.target.value)}
+                    autoComplete="off"
+                    autoFocus
+                    aria-invalid={Boolean(manualError)}
+                  />
+                  <FieldError errors={manualError ? [{ message: manualError }] : undefined} />
+                </Field>
+                <Button type="submit" variant="secondary" className="min-h-11">
+                  Prüfen
+                </Button>
+              </FieldGroup>
+            </form>
+          ) : null}
         </main>
       )}
     </div>

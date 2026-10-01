@@ -26,7 +26,7 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: `${BRAND.club} — ${BRAND.app}`,
-  description: "Ausweisprüfung für das Einlasspersonal.",
+  description: "Zugangsprüfung für Club-Mitarbeiter.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

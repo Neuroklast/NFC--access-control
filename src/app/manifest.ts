@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: `${BRAND.club} — ${BRAND.app}`,
     short_name: BRAND.shortName,
-    description: "Ausweisprüfung für das Einlasspersonal.",
+    description: "Zugangsprüfung für Club-Mitarbeiter.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
