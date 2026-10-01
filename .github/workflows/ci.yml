@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://nfc:nfc@localhost:5432/nfc
+      DIRECT_URL: postgresql://nfc:nfc@localhost:5432/nfc
       SESSION_SECRET: ci-placeholder-secret-value
     steps:
       - uses: actions/checkout@v4

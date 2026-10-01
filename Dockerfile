@@ -10,6 +10,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SESSION_SECRET=build-placeholder-secret
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
+ENV DIRECT_URL=postgresql://build:build@localhost:5432/build
 RUN npx prisma generate && npm run build
 
 FROM node:22-alpine AS runner

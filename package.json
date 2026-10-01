@@ -13,6 +13,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:generate": "prisma generate",
+    "vercel-build": "prisma generate && prisma migrate deploy && node scripts/ensure-admin.mjs && node scripts/seed-demo.mjs && next build",
     "postinstall": "prisma generate"
   },
   "prisma": {

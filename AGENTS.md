@@ -40,7 +40,7 @@ Router only. Read topic files that match the task. Collection: [docs/agent-docs/
 | Next.js | [docs/agent-docs/stack/nextjs.md](docs/agent-docs/stack/nextjs.md) |
 | Tests | [docs/agent-docs/testing/strategy.md](docs/agent-docs/testing/strategy.md), [docs/testing/device-matrix.md](docs/testing/device-matrix.md) |
 | Admin cards | [docs/features/admin-cardholders.md](docs/features/admin-cardholders.md) |
-| Ops / deploy | [docs/ops/synology.md](docs/ops/synology.md), [docs/ops/backup-restore.md](docs/ops/backup-restore.md) |
+| Ops / deploy | [docs/ops/synology.md](docs/ops/synology.md), [docs/ops/vercel.md](docs/ops/vercel.md), [docs/ops/backup-restore.md](docs/ops/backup-restore.md) |
 | NFC / QR | [docs/ops/nfc-cards.md](docs/ops/nfc-cards.md) |
 
 ## Session closeout

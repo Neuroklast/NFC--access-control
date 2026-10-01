@@ -33,7 +33,7 @@ Demo-Karten (nur mit `SEED_DEMO=1`): `DEMO-ACTIVE` (grün), `DEMO-BLOCKED` (rot)
 - **Gerätetests** (Android NFC, iPhone QR) laufen gegen die NAS-HTTPS-URL: [docs/testing/device-matrix.md](docs/testing/device-matrix.md).
 - **Backup:** `backup.bat` bzw. `scripts/backup.sh` — siehe [docs/ops/backup-restore.md](docs/ops/backup-restore.md).
 - **NFC/QR:** [docs/ops/nfc-cards.md](docs/ops/nfc-cards.md).
-- **Phase 2:** `DATABASE_URL` auf Supabase Postgres zeigen. Kein Supabase-SDK im Repo.
+- **Vercel-Demo:** Repo importieren, `DATABASE_URL`/`DIRECT_URL` (Neon/Supabase), `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, optional `SEED_DEMO=1` setzen. Build migriert und legt den Admin an — siehe [docs/ops/vercel.md](docs/ops/vercel.md).
 
 ## Docs
 

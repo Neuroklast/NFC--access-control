@@ -21,6 +21,7 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://nfc:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD in .env setzen}@db:5432/nfc
+      DIRECT_URL: postgresql://nfc:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD in .env setzen}@db:5432/nfc
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET in .env setzen}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@club.local}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD in .env setzen}
