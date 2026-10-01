@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { BRAND } from "@/lib/brand";
 import { extractCardUid } from "@/lib/nfc/read-card";
 
 type ScanStatus =
@@ -219,6 +220,11 @@ export function ScannerScreen() {
     };
   }, [status.kind, stopQr, verifyUid]);
 
+  const resetNow = () => {
+    clearReset();
+    setStatus({ kind: "idle" });
+  };
+
   const submitManual = (event: React.FormEvent) => {
     event.preventDefault();
     const uid = manualUid.trim();
@@ -270,11 +276,17 @@ export function ScannerScreen() {
               <p className="text-center text-xl">Karte unbekannt oder gesperrt</p>
             </>
           )}
+          <Button variant="secondary" className="min-h-11" onClick={resetNow}>
+            Weiter scannen
+          </Button>
         </div>
       ) : (
         <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-6 py-10">
           <div className="flex flex-col gap-2">
-            <h1 className="font-heading text-3xl font-semibold tracking-tight">Club-Ausweis</h1>
+            <p className="text-xs tracking-[0.2em] text-muted-foreground uppercase">
+              {BRAND.club}
+            </p>
+            <h1 className="font-heading text-3xl font-semibold tracking-tight">{BRAND.app}</h1>
             <p className="text-muted-foreground">
               {status.kind === "scanning"
                 ? "Scanne…"

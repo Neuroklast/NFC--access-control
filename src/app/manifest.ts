@@ -1,15 +1,16 @@
 import type { MetadataRoute } from "next";
+import { BRAND } from "@/lib/brand";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "NFC Club Access",
-    short_name: "Club Access",
+    name: `${BRAND.club} — ${BRAND.app}`,
+    short_name: BRAND.shortName,
     description: "Ausweisprüfung für Club-Mitarbeiter",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0F172A",
-    theme_color: "#0F172A",
+    background_color: BRAND.themeColor,
+    theme_color: BRAND.themeColor,
     lang: "de",
     icons: [
       {

@@ -1,12 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { DM_Sans, IBM_Plex_Mono, Jost } from "next/font/google";
 import { DemoBanner } from "@/components/demo-banner";
 import { Providers } from "@/components/providers";
 import { PwaRegister } from "@/components/pwa-register";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
-const sans = IBM_Plex_Sans({
+const sans = DM_Sans({
   variable: "--font-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const heading = Jost({
+  variable: "--font-jost",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -18,12 +25,12 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NFC Club Access",
+  title: `${BRAND.club} — ${BRAND.app}`,
   description: "Ausweisprüfung für Club-Mitarbeiter",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Club Access",
+    title: BRAND.shortName,
   },
   icons: {
     icon: "/icons/icon.svg",
@@ -32,7 +39,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F172A",
+  themeColor: BRAND.themeColor,
   width: "device-width",
   initialScale: 1,
 };
@@ -43,7 +50,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="de" className={`${sans.variable} ${mono.variable} dark h-full antialiased`}>
+    <html
+      lang="de"
+      className={`${sans.variable} ${heading.variable} ${mono.variable} dark h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">
         <Providers>
           <DemoBanner />
