@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { CARDHOLDER_ROLES } from "@/lib/cardholders/schema";
@@ -143,6 +149,9 @@ export function CardholderForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="photo">Foto (optional)</FieldLabel>
+          <FieldDescription>
+            Wird automatisch verkleinert und als WebP gespeichert.
+          </FieldDescription>
           <div className="flex items-center gap-4">
             {preview ? (
               <Image

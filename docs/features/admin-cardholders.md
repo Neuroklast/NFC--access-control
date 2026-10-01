@@ -20,6 +20,8 @@ Karten existieren nur in Postgres. Verwaltung kann Inhaber nicht anlegen, sperre
 - [ ] Given aktive Karte, when Sperren in der Liste, then Scanner → Denied ohne Namen.
 - [ ] Given Löschen, when Confirm mit Nachnamen, then Row weg; Abbrechen ändert nichts; Löschen nur auf der Edit-Seite.
 - [ ] Given Foto, when Upload, then Scanner-Grant zeigt das Bild (signierte URL, 60 s).
+- [ ] Given Foto ohne Upload, when Speichern, then Karte wird trotzdem angelegt (Foto optional).
+- [ ] Given großes Bild, when Upload, then Ergebnis ist WebP, längste Kante ≤ 512 px, ≤ 200 KB.
 - [ ] Given falsches aktuelles Passwort, when Passwort ändern, then 403, keine Änderung.
 - [ ] Given Passwort ≥ 12 Zeichen, when ändern, then 204 und neuer Login funktioniert.
 - [ ] Denied path: Scanner-Session darf Admin-APIs nicht aufrufen (kein Cookie → 401).

@@ -23,6 +23,16 @@ Keine Defaults: `SESSION_SECRET`, `POSTGRES_PASSWORD` und `ADMIN_PASSWORD` müss
 
 Demo-Karten (nur mit `SEED_DEMO=1`): `DEMO-ACTIVE` (grün), `DEMO-BLOCKED` (rot).
 
+## Demo ohne Datenbank
+
+Ohne `DATABASE_URL` startet die App automatisch im **Demo-Modus** (In-Memory, gelbes Banner). Kein Postgres nötig.
+
+- Demo-Karten: `DEMO-ACTIVE` (grün), `DEMO-BLOCKED` (rot)
+- Admin: `admin@club.local` / `demo-password-123` (oder `ADMIN_EMAIL`/`ADMIN_PASSWORD`)
+- Daten sind nach einem Neustart weg; `DEMO_MODE=1` erzwingt den Modus auch mit DB.
+
+Lokal: `.env` ohne `DATABASE_URL` anlegen und `npm run dev`. Auf Vercel: einfach deployen.
+
 ## Checks
 
 `npm run lint` · `npm run typecheck` · `npm run test` · `npm run build` — laufen in CI auf jedem Push/PR.

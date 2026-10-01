@@ -6,8 +6,7 @@ import { CardholderForm } from "@/components/admin/cardholder-form";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getSession } from "@/lib/auth/session";
-import { cardholderSelect } from "@/lib/cardholders/schema";
-import { prisma } from "@/lib/db/prisma";
+import { getStore } from "@/lib/store";
 
 export default async function EditCardholderPage({
   params,
@@ -20,7 +19,7 @@ export default async function EditCardholderPage({
   }
 
   const { id } = await params;
-  const row = await prisma.cardholder.findUnique({ where: { id }, select: cardholderSelect });
+  const row = await getStore().findCardholder(id);
   if (!row) {
     notFound();
   }

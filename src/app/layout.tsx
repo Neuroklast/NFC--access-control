@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { DemoBanner } from "@/components/demo-banner";
 import { Providers } from "@/components/providers";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
@@ -45,6 +46,7 @@ export default function RootLayout({
     <html lang="de" className={`${sans.variable} ${mono.variable} dark h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <Providers>
+          <DemoBanner />
           {children}
           <PwaRegister />
         </Providers>

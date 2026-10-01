@@ -2,7 +2,18 @@
 
 Ziel: dieselbe App als öffentliche Demo auf Vercel, ohne Code-Änderung gegenüber Docker.
 
-## 1. Datenbank
+## 0. Ohne Datenbank (Demo-Modus)
+
+Kein Postgres nötig: einfach deployen und `DATABASE_URL` leer lassen. Die App läuft dann im **Demo-Modus** mit In-Memory-Daten:
+
+- Demo-Karten: `DEMO-ACTIVE` (grün), `DEMO-BLOCKED` (rot)
+- Admin: `ADMIN_EMAIL` (Default `admin@club.local`), Passwort `ADMIN_PASSWORD` oder `demo-password-123`
+- Ein gelbes Banner weist auf den Demo-Modus hin
+- Daten gehen bei jedem Neustart verloren; mehrere Instanzen teilen sich keinen Zustand
+
+`DEMO_MODE=1` erzwingt den Demo-Modus auch mit gesetzter `DATABASE_URL`.
+
+## 1. Datenbank (optional)
 
 Kostenloses Postgres, z. B. Neon oder Supabase. Beide Zugangsstrings notieren:
 
@@ -26,13 +37,11 @@ Repo importieren. Framework wird als Next.js erkannt. Als Build-Command läuft a
 
 ## 4. Build-Ablauf
 
-`vercel-build` führt aus:
+`scripts/vercel-build.mjs`:
 
 1. `prisma generate`
-2. `prisma migrate deploy` — Schema anlegen/aktualisieren
-3. `scripts/ensure-admin.mjs` — Admin anlegen, falls keiner existiert
-4. `scripts/seed-demo.mjs` — Demo-Karten, nur bei `SEED_DEMO=1`
-5. `next build`
+2. **Ohne `DATABASE_URL`:** Migration und Seed werden übersprungen (Demo-Modus), direkt `next build`.
+3. **Mit `DATABASE_URL`:** `prisma migrate deploy`, `ensure-admin`, `seed-demo`, dann `next build`. `DIRECT_URL` fällt auf `DATABASE_URL` zurück, wenn nicht gesetzt.
 
 Migrationen laufen bei **jedem** Deploy. Für eine Demo in Ordnung; produktiv lieber getrennt und manuell freigeben.
 

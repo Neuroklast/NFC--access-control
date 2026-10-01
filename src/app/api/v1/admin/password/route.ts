@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { getSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db/prisma";
 import { problemResponse } from "@/lib/http/problem";
+import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const admin = await prisma.adminUser.findUnique({ where: { id: session.sub } });
+  const admin = await getStore().findAdminById(session.sub);
   if (!admin) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", INSTANCE);
   }
@@ -50,7 +50,7 @@ export async function PATCH(request: Request) {
   }
 
   const passwordHash = await hashPassword(parsed.data.new_password);
-  await prisma.adminUser.update({ where: { id: admin.id }, data: { passwordHash } });
+  await getStore().updateAdminPassword(admin.id, passwordHash);
 
   return new Response(null, { status: 204 });
 }

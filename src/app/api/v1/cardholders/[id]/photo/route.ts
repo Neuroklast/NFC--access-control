@@ -1,13 +1,14 @@
 import { getSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db/prisma";
 import { problemResponse } from "@/lib/http/problem";
+import { toOptimizedWebp } from "@/lib/photos/process";
 import { verifyPhotoToken } from "@/lib/photos/token";
+import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const INSTANCE = "/api/v1/cardholders/{id}/photo";
-const MAX_BYTES = 200 * 1024;
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -30,17 +31,14 @@ export async function GET(request: Request, context: RouteContext) {
     return problemResponse(401, "Unauthorized", "Nicht berechtigt.", INSTANCE);
   }
 
-  const row = await prisma.cardholder.findUnique({
-    where: { id },
-    select: { photo: true, photoMime: true },
-  });
-  if (!row?.photo || !row.photoMime) {
+  const record = await getStore().getCardholderPhoto(id);
+  if (!record) {
     return problemResponse(404, "Not found", "Kein Foto vorhanden.", INSTANCE);
   }
 
-  return new Response(new Uint8Array(row.photo), {
+  return new Response(new Uint8Array(record.photo), {
     headers: {
-      "Content-Type": row.photoMime,
+      "Content-Type": record.photoMime,
       "Cache-Control": "private, no-store",
       "Content-Disposition": "inline",
     },
@@ -59,20 +57,23 @@ export async function PUT(request: Request, context: RouteContext) {
     return problemResponse(422, "Validation failed", "Nur JPEG, PNG oder WebP.", INSTANCE);
   }
 
-  const buffer = Buffer.from(await request.arrayBuffer());
-  if (buffer.byteLength === 0 || buffer.byteLength > MAX_BYTES) {
-    return problemResponse(422, "Validation failed", "Foto max. 200 KB.", INSTANCE);
+  const upload = Buffer.from(await request.arrayBuffer());
+  if (upload.byteLength === 0 || upload.byteLength > MAX_UPLOAD_BYTES) {
+    return problemResponse(422, "Validation failed", "Bild max. 8 MB.", INSTANCE);
   }
 
+  let webp: Uint8Array<ArrayBuffer>;
   try {
-    await prisma.cardholder.update({
-      where: { id },
-      data: { photo: buffer, photoMime: mime, photoUpdatedAt: new Date() },
-    });
-    return new Response(null, { status: 204 });
+    webp = await toOptimizedWebp(upload);
   } catch {
+    return problemResponse(422, "Validation failed", "Bild konnte nicht verarbeitet werden.", INSTANCE);
+  }
+
+  const saved = await getStore().setCardholderPhoto(id, webp, "image/webp");
+  if (!saved) {
     return problemResponse(404, "Not found", "Karte nicht gefunden.", INSTANCE);
   }
+  return new Response(null, { status: 204 });
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
@@ -82,13 +83,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", INSTANCE);
   }
 
-  try {
-    await prisma.cardholder.update({
-      where: { id },
-      data: { photo: null, photoMime: null, photoUpdatedAt: null },
-    });
-    return new Response(null, { status: 204 });
-  } catch {
+  const cleared = await getStore().clearCardholderPhoto(id);
+  if (!cleared) {
     return problemResponse(404, "Not found", "Karte nicht gefunden.", INSTANCE);
   }
+  return new Response(null, { status: 204 });
 }

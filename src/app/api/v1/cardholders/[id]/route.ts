@@ -1,8 +1,7 @@
-import { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth/session";
-import { cardholderPatchSchema, cardholderSelect, serializeCardholder } from "@/lib/cardholders/schema";
-import { prisma } from "@/lib/db/prisma";
+import { cardholderPatchSchema, serializeCardholder } from "@/lib/cardholders/schema";
 import { problemResponse } from "@/lib/http/problem";
+import { ConflictError, getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", instance(id));
   }
 
-  const row = await prisma.cardholder.findUnique({ where: { id }, select: cardholderSelect });
+  const row = await getStore().findCardholder(id);
   if (!row) {
     return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
   }
@@ -46,25 +45,20 @@ export async function PATCH(request: Request, context: RouteContext) {
     return problemResponse(422, "Validation failed", "Kartendaten ungültig.", instance(id));
   }
 
-  const data: Prisma.CardholderUpdateInput = {};
-  if (parsed.data.card_uid !== undefined) data.cardUid = parsed.data.card_uid;
-  if (parsed.data.first_name !== undefined) data.firstName = parsed.data.first_name;
-  if (parsed.data.last_name !== undefined) data.lastName = parsed.data.last_name;
-  if (parsed.data.role !== undefined) data.role = parsed.data.role;
-  if (parsed.data.is_active !== undefined) data.isActive = parsed.data.is_active;
-
   try {
-    const updated = await prisma.cardholder.update({
-      where: { id },
-      data,
-      select: cardholderSelect,
+    const updated = await getStore().updateCardholder(id, {
+      ...(parsed.data.card_uid !== undefined ? { cardUid: parsed.data.card_uid } : {}),
+      ...(parsed.data.first_name !== undefined ? { firstName: parsed.data.first_name } : {}),
+      ...(parsed.data.last_name !== undefined ? { lastName: parsed.data.last_name } : {}),
+      ...(parsed.data.role !== undefined ? { role: parsed.data.role } : {}),
+      ...(parsed.data.is_active !== undefined ? { isActive: parsed.data.is_active } : {}),
     });
-    return Response.json(serializeCardholder(updated));
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+    if (!updated) {
       return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
     }
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    return Response.json(serializeCardholder(updated));
+  } catch (error) {
+    if (error instanceof ConflictError) {
       return problemResponse(409, "Conflict", "Diese Karten-UID existiert bereits.", instance(id));
     }
     throw error;
@@ -78,13 +72,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", instance(id));
   }
 
-  try {
-    await prisma.cardholder.delete({ where: { id } });
-    return new Response(null, { status: 204 });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
-    }
-    throw error;
+  const deleted = await getStore().deleteCardholder(id);
+  if (!deleted) {
+    return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
   }
+  return new Response(null, { status: 204 });
 }

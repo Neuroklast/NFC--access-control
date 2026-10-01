@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/db/prisma";
 import { verifyPassword } from "@/lib/auth/password";
 import { clearSessionCookie, getSession, setSessionCookie } from "@/lib/auth/session";
 import { loginBodySchema } from "@/lib/cardholders/schema";
 import { clientIp, problemResponse } from "@/lib/http/problem";
 import { rateLimit } from "@/lib/http/rate-limit";
+import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,9 +36,7 @@ export async function POST(request: Request) {
     return problemResponse(401, "Unauthorized", "E-Mail oder Passwort ungültig.", INSTANCE);
   }
 
-  const admin = await prisma.adminUser.findUnique({
-    where: { email: parsed.data.email },
-  });
+  const admin = await getStore().findAdminByEmail(parsed.data.email);
   if (!admin) {
     return problemResponse(401, "Unauthorized", "E-Mail oder Passwort ungültig.", INSTANCE);
   }
