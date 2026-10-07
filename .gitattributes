@@ -1,0 +1,8 @@
+# Shell-Skripte immer mit LF auschecken - CRLF bricht sie auf NAS/Linux.
+*.sh text eol=lf
+# Windows-Skripte mit CRLF.
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+# .env-Vorlage und Compose-YAML mit LF (CRLF wuerde Werte verfaelschen).
+.env.example text eol=lf
+*.yml text eol=lf

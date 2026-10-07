@@ -23,6 +23,10 @@ Ergebnis: `backups/nfc-YYYYMMDD-HHMMSS.sql.gz`, Retention `RETENTION_DAYS` (Defa
 - **Synology:** Aufgabenplaner → Skript `sh /volume1/docker/nfc-access-control/scripts/backup.sh`, täglich.
 - **Windows:** Task Scheduler → `backup.bat`, täglich.
 
+Das Skript legt Backups relativ zum aktuellen Arbeitsverzeichnis nach `./backups`
+ab. Im Aufgabenplaner daher vorher in das Repo-Verzeichnis wechseln
+(`cd /volume1/docker/nfc-access-control && …`) oder `BACKUP_DIR` absolut setzen.
+
 Backups liegen neben dem Repo. Für NAS empfiehlt sich ein Share, das von Synology Hyper Backup mitgesichert wird.
 
 ## Restore

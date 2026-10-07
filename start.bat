@@ -22,6 +22,9 @@ if not exist ".env" (
   for /f "usebackq delims=" %%P in (`powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\init-env.ps1"`) do set "NEW_ADMIN_PW=%%P"
 )
 
+set "APP_PORT=3000"
+if exist ".env" for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "if (Test-Path .env) { $m = Select-String -Path .env -Pattern '^APP_PORT=([0-9]+)$'; if ($m) { $m.Matches[0].Groups[1].Value } }"`) do set "APP_PORT=%%P"
+
 echo [INFO] Container bauen und starten...
 docker compose up -d --build
 if errorlevel 1 (
@@ -29,11 +32,11 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [INFO] Warte auf http://localhost:3000 ...
+echo [INFO] Warte auf http://localhost:%APP_PORT% ...
 set /a tries=0
 :waitloop
 set /a tries+=1
-powershell -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing http://localhost:3000 -TimeoutSec 2 | Out-Null; exit 0 } catch { exit 1 }" >nul 2>nul
+powershell -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing http://localhost:%APP_PORT% -TimeoutSec 2 | Out-Null; exit 0 } catch { exit 1 }" >nul 2>nul
 if not errorlevel 1 goto ready
 if !tries! geq 60 (
   echo [WARN] App antwortet noch nicht. Logs: docker compose logs -f app
@@ -61,8 +64,8 @@ call npx prisma db seed
 :done
 echo.
 echo ============================================
-echo  Scanner : http://localhost:3000
-echo  Admin   : http://localhost:3000/admin/login
+echo  Scanner : http://localhost:%APP_PORT%
+echo  Admin   : http://localhost:%APP_PORT%/admin/login
 if defined NEW_ADMIN_PW (
   echo  Login   : admin@club.local
   echo  Passwort: !NEW_ADMIN_PW!
@@ -74,5 +77,5 @@ echo  Demo    : DEMO-ACTIVE (gruen) / DEMO-BLOCKED (rot)
 echo ============================================
 echo  Stoppen : docker compose down
 echo.
-start "" http://localhost:3000
+start "" http://localhost:%APP_PORT%
 endlocal

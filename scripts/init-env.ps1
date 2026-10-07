@@ -14,6 +14,7 @@ $adminPassword = New-B64Url 18
 
 $content = @"
 DATABASE_URL=postgresql://nfc:$postgresPassword@localhost:5432/nfc
+DIRECT_URL=postgresql://nfc:$postgresPassword@localhost:5432/nfc
 SESSION_SECRET=$sessionSecret
 ADMIN_EMAIL=admin@club.local
 ADMIN_PASSWORD=$adminPassword
