@@ -2,6 +2,8 @@
 
 PWA für Einlasspersonal: prüft, ob jemand Club-Mitarbeiter ist. Die Admin-UI pflegt Karten und Fotos.
 
+Läuft als Docker-Stack (App + Postgres). Ziel ist eine Synology NAS mit Container Manager, das fertige Image liegt unter `ghcr.io/neuroklast/nfc--access-control`.
+
 ## Quick start
 
 Windows: `start.bat` doppelklicken. Fragt Admin-E-Mail/Passwort, Demo-Karten und Port ab, erzeugt `.env` mit Zufallswerten, baut, startet, verifiziert Login und Karte und öffnet den Browser. Das Admin-Passwort wird einmal angezeigt.
@@ -45,7 +47,7 @@ Lokal: `.env` ohne `DATABASE_URL` anlegen und `npm run dev`. Auf Vercel: einfach
 
 ## Betrieb
 
-- **HTTPS ist Pflicht** für Web NFC und Kamera. Über eine reine LAN-IP geht das nie. Es braucht einen Hostnamen mit gültigem Zertifikat: eigene Domain oder Synology-DDNS (`*.synology.me`), dann Let's-Encrypt-Zertifikat + DSM-Reverse-Proxy `https://<hostname>` → `http://localhost:<APP_PORT>`. Anleitung: [docs/ops/synology.md](docs/ops/synology.md). `http://` im WLAN reicht nicht; die App weist bei fehlendem HTTPS darauf hin.
+- **HTTPS:** Pflicht für Web NFC und Kamera. Über eine reine LAN-IP geht das nie. Es braucht einen Hostnamen mit gültigem Zertifikat: eigene Domain oder Synology-DDNS (`*.synology.me`), dann Let's-Encrypt-Zertifikat + DSM-Reverse-Proxy `https://<hostname>` → `http://localhost:<APP_PORT>`. Anleitung: [docs/ops/synology.md](docs/ops/synology.md). `http://` im WLAN reicht nicht; die App weist bei fehlendem HTTPS darauf hin.
 - **Gerätetests** (Android NFC, iPhone QR) laufen gegen die NAS-HTTPS-URL: [docs/testing/device-matrix.md](docs/testing/device-matrix.md).
 - **Backup:** `backup.bat` bzw. `scripts/backup.sh`. Siehe [docs/ops/backup-restore.md](docs/ops/backup-restore.md).
 - **Update (NAS):** `sh update.sh` holt die neueste Version von GitHub (git fetch + Fast-Forward), erstellt ein DB-Backup (außer mit `--no-backup`) und baut die Container neu. Siehe [docs/ops/synology.md](docs/ops/synology.md).
