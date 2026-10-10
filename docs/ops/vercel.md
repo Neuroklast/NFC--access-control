@@ -1,4 +1,4 @@
-# Ops — Vercel Demo
+# Ops: Vercel Demo
 
 Ziel: dieselbe App als öffentliche Demo auf Vercel, ohne Code-Änderung gegenüber Docker.
 
@@ -17,8 +17,8 @@ Kein Postgres nötig: einfach deployen und `DATABASE_URL` leer lassen. Die App l
 
 Kostenloses Postgres, z. B. Neon oder Supabase. Beide Zugangsstrings notieren:
 
-- `DATABASE_URL` — gepoolt (Supabase: Port `6543`, `?pgbouncer=true`)
-- `DIRECT_URL` — direkt (Supabase: Port `5432`) — nur für Migrationen
+- `DATABASE_URL`: gepoolt (Supabase: Port `6543`, `?pgbouncer=true`)
+- `DIRECT_URL`: direkt (Supabase: Port `5432`), nur für Migrationen
 
 ## 2. Vercel
 
@@ -43,7 +43,7 @@ Repo importieren. Framework wird als Next.js erkannt. Als Build-Command läuft a
 2. **Ohne `DATABASE_URL`:** Migration und Seed werden übersprungen (Demo-Modus), direkt `next build`.
 3. **Mit `DATABASE_URL`:** `prisma migrate deploy`, `ensure-admin`, `seed-demo`, dann `next build`. `DIRECT_URL` fällt auf `DATABASE_URL` zurück, wenn nicht gesetzt.
 
-Migrationen laufen bei **jedem** Deploy. Für eine Demo in Ordnung; produktiv lieber getrennt und manuell freigeben.
+Migrationen laufen bei jedem Deploy. Für eine Demo in Ordnung; produktiv lieber getrennt und manuell freigeben.
 
 ## 5. Nach dem Deploy
 
@@ -55,7 +55,7 @@ Vercel liefert automatisch HTTPS. Damit ist der Secure Context für Kamera und W
 
 ## Grenzen der Demo
 
-- **Rate-Limit** liegt im Speicher pro Instanz. Bei mehreren Serverless-Instanzen ist es ungenau — für eine Demo akzeptabel, produktiv gehört es geteilt (z. B. Redis).
+- **Rate-Limit** liegt im Speicher pro Instanz. Bei mehreren Serverless-Instanzen ist es ungenau. Für eine Demo akzeptabel, produktiv gehört es geteilt (z. B. Redis).
 - **Fotos** liegen als `bytea` in der Datenbank. Bei wenigen hundert Mitarbeitern unkritisch.
 - **Web NFC** funktioniert nur in Android Chrome. iPhone nutzt QR.
 - `ADMIN_PASSWORD` dient nur der Erstanlage; danach zählt der DB-Hash.

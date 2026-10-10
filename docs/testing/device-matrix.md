@@ -1,22 +1,22 @@
-# Testing — Geräte-Matrix (Einlass)
+# Testing: Geräte-Matrix (Einlass)
 
 Alle Tests laufen gegen die **NAS-HTTPS-URL**, nicht gegen `http://localhost`. NFC und Kamera brauchen einen Secure Context.
 
-Vorbereitung: Admin eingeloggt, drei Karten im Bestand — **aktiv**, **gesperrt** (`is_active=false`), **unbekannt** (UID nicht in der DB). Foto beim aktiven Inhaber hinterlegt.
+Vorbereitung: Admin eingeloggt, drei Karten im Bestand: **aktiv**, **gesperrt** (`is_active=false`), **unbekannt** (UID nicht in der DB). Foto beim aktiven Inhaber hinterlegt.
 
 ## Matrix
 
 | # | Gerät / Weg | Vorgehen | Erwartet |
 | --- | --- | --- | --- |
 | 1 | Android Chrome, NFC, aktiv | „Scan starten", Karte auflegen | Grün, Name + Rolle + Foto, Reset nach ~5 s |
-| 2 | Android Chrome, NFC, gesperrt | wie 1 | Rot, „Karte unbekannt oder gesperrt", **kein** Name |
+| 2 | Android Chrome, NFC, gesperrt | wie 1 | Rot, „Karte unbekannt oder gesperrt", kein Name |
 | 3 | Android Chrome, NFC, unbekannt | wie 1 | Rot, kein Name |
 | 4 | iPhone Safari, QR, aktiv | „QR scannen", QR ins Bild | Grün, Name + Rolle + Foto |
 | 5 | iPhone Safari, QR, gesperrt | wie 4 | Rot, kein Name |
 | 6 | iPhone Safari, QR, unbekannt | wie 4 | Rot, kein Name |
 | 7 | iPhone Safari, manuelle UID | UID eintippen → „Prüfen" | wie 4–6 |
 | 8 | Schlechte Verbindung | DevTools/Netz auf „Slow 3G", scannen | „Keine Antwort. Erneut versuchen." nach ~6 s, kein Hänger |
-| 9 | Offline | Flugmodus, scannen | „Keine Verbindung", **nie** Grün |
+| 9 | Offline | Flugmodus, scannen | „Keine Verbindung", nie Grün |
 | 10 | HTTPS-Zertifikat | NAS-URL öffnen | Gültig, keine Warnung, Schloss |
 | 11 | PWA installiert | „Zum Home-Bildschirm", starten | Vollbild, dunkel, Scanner nutzbar |
 | 12 | Kamera verweigert | Berechtigung ablehnen | Klare Meldung, manuelle UID bleibt nutzbar |

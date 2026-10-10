@@ -1,6 +1,6 @@
-# PRD — NFC Club Access
+# PRD: NFC Club Access
 
-> Living document. Evidence: Systembrief (Nutzer, 2026-09-28), Klärung „Ausweis nicht Türöffner“, Auftrag Admin-Kartenpflege. Keine Markt-/Interviewdaten — Annahmen sind markiert.
+> Living document. Evidence: Systembrief (Nutzer, 2026-09-28), Klärung „Ausweis nicht Türöffner“, Auftrag Admin-Kartenpflege. Keine Markt-/Interviewdaten. Annahmen sind markiert.
 
 ## 1. Product
 
@@ -70,7 +70,7 @@ AdminUser: `id`, `email` unique, `password_hash`, timestamps. Seed aus Env beim 
 - Security: Session HttpOnly/Secure/SameSite; Login rate-limit + generische Fehlermeldung; Mutationen re-checken AuthZ; kein `localStorage`-Token.
 - Legal: internes Tool, kein öffentlicher DE-Auftritt. Personenbezogene Mitarbeiterdaten → DSGVO intern (Annahme, keine Rechtsberatung).
 - i18n: UI Deutsch. Kein i18n-Framework im MVP.
-- Design (UI Pro Max, 2026-09-28): Dark-first, Minimalism/Swiss. Tokens — Primary `#1E293B`, Accent/Grant `#22C55E`, Destructive `#EF4444`, Background `#0F172A`, Foreground `#F8FAFC`, Card `#1B2336`, Muted `#94A3B8`. CI später über CSS-Variablen. Body IBM Plex Sans; UID IBM Plex Mono. Lucide-Icons, keine Emoji-Icons. Motion 150–250 ms, `prefers-reduced-motion` = instant. Scanner: ein Primary-CTA. Admin: Tabelle Desktop, Cards <768px.
+- Design (UI Pro Max, 2026-09-28): Dark-first, Minimalism/Swiss. Tokens: Primary `#1E293B`, Accent/Grant `#22C55E`, Destructive `#EF4444`, Background `#0F172A`, Foreground `#F8FAFC`, Card `#1B2336`, Muted `#94A3B8`. CI später über CSS-Variablen. Body IBM Plex Sans; UID IBM Plex Mono. Lucide-Icons, keine Emoji-Icons. Motion 150–250 ms, `prefers-reduced-motion` = instant. Scanner: ein Primary-CTA. Admin: Tabelle Desktop, Cards <768px.
 
 ## 7. Integrations
 

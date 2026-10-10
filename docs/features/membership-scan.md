@@ -1,11 +1,11 @@
-# Feature Spec — Membership scan
+# Feature Spec: Membership scan
 
 - Feature: NFC/QR Ausweisprüfung
 - Owner: NFC Club Access
 
 ## Problem
 
-Einlass muss prüfen, ob jemand Club-Mitarbeiter ist — ohne Datenbank-Konsole.
+Einlass muss prüfen, ob jemand Club-Mitarbeiter ist, ohne Datenbank-Konsole.
 
 ## Acceptance criteria
 

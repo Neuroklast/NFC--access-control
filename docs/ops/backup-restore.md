@@ -1,4 +1,4 @@
-# Ops — Backup & Restore
+# Ops: Backup & Restore
 
 Die Datenbank ist klein (Kartenstammdaten + Fotos als `bytea`). Ein `pg_dump` deckt alles ab.
 

@@ -1,4 +1,4 @@
-# Ops — Synology Docker & HTTPS
+# Ops: Synology Docker & HTTPS
 
 ## Schnellstart (empfohlen, per SSH)
 
@@ -12,16 +12,16 @@
    `cd /volume1/docker/nfc-access-control && sh install.sh`
 4. Der Installer führt in nummerierten Schritten durch die Einrichtung:
    - **Schritt 1:** Voraussetzungen prüfen (Docker, Compose, Port frei, Speicher).
-   - **Schritt 2:** **Admin-E-Mail** und **Admin-Passwort** (leer = automatisch
-     generieren), **Demo-Karten** (j/n), **Host-Port der App** (Default 3000).
+   - **Schritt 2:** Admin-E-Mail und Admin-Passwort (leer = automatisch
+     generieren), Demo-Karten (j/n), Host-Port der App (Default 3000).
    - **Schritt 3–4:** `.env` erzeugen, Container bauen/starten.
-   - **Schritt 5:** Warten und **verifizieren**: DB erreichbar (`/api/v1/health`),
+   - **Schritt 5:** Warten und verifizieren: DB erreichbar (`/api/v1/health`),
      Admin-Login, bei Demo zusätzlich die Karte `DEMO-ACTIVE`.
-   - **Schritt 6–7:** **LAN-Adresse** ermitteln und Zusammenfassung ausgeben
+   - **Schritt 6–7:** LAN-Adresse ermitteln und Zusammenfassung ausgeben
      (Scanner- und Admin-URL, Login, Passwort, HTTPS-Anleitung).
-   Bei einer **bestehenden Installation** (vorhandene `.env`) bleiben Admin-Zugang,
-   DB-Passwort und Session-Secret erhalten — es werden nur Demo und Ports abgefragt.
-5. **HTTPS** über den DSM Reverse Proxy einrichten (siehe unten) und die App danach
+   Bei einer bestehenden Installation (vorhandene `.env`) bleiben Admin-Zugang,
+   DB-Passwort und Session-Secret erhalten. Es werden nur Demo und Ports abgefragt.
+5. HTTPS über den DSM Reverse Proxy einrichten (siehe unten) und die App danach
    über die HTTPS-URL aufrufen. Ohne HTTPS funktionieren NFC und Kamera nicht; der
    Installer weist am Ende darauf hin.
 
@@ -35,13 +35,13 @@ Hinweise:
   `FORCE_RECONFIGURE=1` wird sie neu geschrieben (Admin-Zugang, DB-Passwort und
   Session-Secret bleiben erhalten).
 - Admin-Passwörter und E-Mails sind auf `A-Za-z0-9._@%+=:/!?*,-` beschränkt (keine
-  Leerzeichen, `$`, `#`, Anführungszeichen, Backslash) — so kann Compose die Werte in
+  Leerzeichen, `$`, `#`, Anführungszeichen, Backslash). So kann Compose die Werte in
   `.env` nicht umdeuten.
 - Die Installer-Ausgabe enthält das generierte Admin-Passwort. Nicht in Logs umleiten
   (kein `| tee`) und die Terminal-Historie beachten. Ein selbst gesetztes Passwort
   wird nicht angezeigt.
 - Nur der App-Port steht in `.env` (`APP_PORT`) und wird von `docker-compose.yml`
-  veröffentlicht. Postgres hat **keinen Host-Port** und ist nur im Docker-Netz
+  veröffentlicht. Postgres hat keinen Host-Port und ist nur im Docker-Netz
   über den Service-Namen `db` erreichbar (z. B. `docker compose exec db psql -U nfc -d nfc`).
   Ein Host-Prozess (lokales `npm run dev`, DB-GUI) erreicht die DB daher nicht.
 - `.env` muss eine reguläre Datei sein (kein Symlink); der Installer ersetzt sie
@@ -62,26 +62,26 @@ Ablauf: lokale Prüfung → `git fetch` → Fast-Forward auf `origin/<branch>` �
 DB-Backup (Pflicht, siehe unten) → `docker compose up -d --build` → Warten auf die
 App. `.env`, `backups/` und das Postgres-Volume bleiben erhalten; Migrationen
 laufen beim Start des Containers automatisch. Nur der Remote-Stand wird gebaut,
-und der erfolgreiche Neubau wird als Marker in `.git/` vermerkt — so wird ein
+und der erfolgreiche Neubau wird als Marker in `.git/` vermerkt. So wird ein
 abgebrochener Lauf beim nächsten Start zuverlässig wiederholt.
 
 Optionen und Umgebungsvariablen:
 
-- `sh update.sh --force` bzw. `FORCE_RESTART=1` — baut auch dann neu, wenn der
+- `sh update.sh --force` bzw. `FORCE_RESTART=1`: baut auch dann neu, wenn der
   Code bereits aktuell ist, und erstellt den App-Container neu.
-- `sh update.sh --no-backup` bzw. `SKIP_BACKUP=1` — Backup überspringen (nicht
+- `sh update.sh --no-backup` bzw. `SKIP_BACKUP=1`: Backup überspringen (nicht
   empfohlen; es wird dann eine Warnung ausgegeben).
-- `BRANCH=<name>` — Branch wählen. Der Branch muss bereits ausgecheckt sein
+- `BRANCH=<name>`: Branch wählen. Der Branch muss bereits ausgecheckt sein
   (`git checkout <name>` vorher), sonst bricht das Update ab.
 
 Hinweise:
 
 - Voraussetzung ist ein per `git clone` angelegtes Repo mit Remote `origin` über
-  **HTTPS oder SSH** (unsichere Protokolle wie `http://`/`git://` werden
+  HTTPS oder SSH (unsichere Protokolle wie `http://`/`git://` werden
   abgelehnt). Eine über File Station oder Release-ZIP kopierte Installation
-  ohne `.git` lässt sich nicht per `update.sh` aktualisieren — neues ZIP
+  ohne `.git` lässt sich nicht per `update.sh` aktualisieren. Neues ZIP
   darüber entpacken und `sh install.sh` bzw. `docker compose up -d --build`.
-- Lokale Änderungen an versionierten Dateien **und** lokale, nicht gepushte
+- Lokale Änderungen an versionierten Dateien und lokale, nicht gepushte
   Commits brechen das Update ab (nur der Remote-Stand wird gebaut). `.env` und
   `backups/` sind ignoriert und stören nicht.
 - Vor dem Neubau ist ein DB-Backup Pflicht. Läuft der Postgres-Container nicht,
@@ -94,14 +94,14 @@ Hinweise:
   Nutzer gehören (sonst bricht Git mit „dubious ownership" ab), und das
   Repo-Verzeichnis darf nur von diesem Nutzer beschreibbar sein. Besser: den
   Admin zur Docker-Gruppe hinzufügen und ohne `sudo` arbeiten.
-- **Rebuild vs. Daten:** Wird ein Repo neu geklont, muss das in **denselben Pfad**
-  geschehen — Compose leitet Namen und `pgdata`-Volume vom Ordnernamen ab. Ein
+- **Rebuild vs. Daten:** Wird ein Repo neu geklont, muss das in denselben Pfad
+  geschehen. Compose leitet Namen und `pgdata`-Volume vom Ordnernamen ab. Ein
   anderer Pfad erzeugt ein leeres Volume; die alten Daten scheinen verloren.
 - **Rollback:** Zuerst das passende DB-Backup einspielen
   ([backup-restore.md](backup-restore.md)), dann Code zurückrollen:
   `git checkout <alter-commit> && docker compose up -d --build` (danach mit
   `git checkout <branch>` wieder ins Update-Gleis). Ein Code-Rollback macht eine
-  bereits angewandte Migration **nicht** rückgängig.
+  bereits angewandte Migration nicht rückgängig.
 
 ## Container Manager (ohne SSH)
 
@@ -117,7 +117,7 @@ Hinweise:
 4. Projekt starten. Beim ersten Start laufen Migration und Admin-Anlage automatisch.
 5. HTTPS-Reverse-Proxy einrichten (siehe unten).
 
-Wichtig: `.env` braucht **LF**-Zeilenenden (nicht CRLF) — Compose würde sonst `\r` in
+Wichtig: `.env` braucht LF-Zeilenenden (nicht CRLF). Compose würde sonst `\r` in
 Werte übernehmen. `install.sh`, `update.sh`, `scripts/init-env.sh` und
 `scripts/backup.sh` normalisieren ihre eigenen Zeilenenden selbst; bei einer
 Windows-Kopie daher vorher `sed -i 's/\r$//' .env` ausführen.
@@ -125,50 +125,50 @@ Windows-Kopie daher vorher `sed -i 's/\r$//' .env` ausführen.
 ## Manueller Start (Erststart)
 
 1. Repo auf die NAS kopieren (oder Image auf einem PC bauen und laden).
-2. `.env` anlegen — **keine Defaults**:
+2. `.env` anlegen, keine Defaults:
    - `SESSION_SECRET` ≥ 32 Zeichen: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
    - `POSTGRES_PASSWORD` zufällig, ≥ 16 Zeichen
    - `ADMIN_EMAIL` und `ADMIN_PASSWORD` (≥ 12 Zeichen)
-3. `docker compose pull && docker compose up -d` — fertiges Image von
+3. `docker compose pull && docker compose up -d`: fertiges Image von
    `ghcr.io/neuroklast/nfc--access-control` (kein Build auf der NAS). Aus dem
    Quellcode stattdessen `docker compose up -d --build`.
 
-Beim Start läuft `prisma migrate deploy`, danach `scripts/ensure-admin.mjs` (legt den Admin **nur** an, wenn noch keiner existiert). Demo-Karten nur mit `SEED_DEMO=1`.
+Beim Start läuft `prisma migrate deploy`, danach `scripts/ensure-admin.mjs` (legt den Admin nur an, wenn noch keiner existiert). Demo-Karten nur mit `SEED_DEMO=1`.
 
 ## HTTPS (Synology Reverse Proxy)
 
-Web NFC und Kamera brauchen einen **Secure Context** (HTTPS). Über eine reine
-LAN-IP geht das **nie** — für eine IP gibt es kein vertrauenswürdiges Zertifikat.
-Der Kunde braucht daher einen **Hostnamen** mit gültigem Zertifikat. TLS
+Web NFC und Kamera brauchen einen Secure Context (HTTPS). Über eine reine
+LAN-IP geht das nie: für eine IP gibt es kein vertrauenswürdiges Zertifikat.
+Der Kunde braucht daher einen Hostnamen mit gültigem Zertifikat. TLS
 terminiert am Synology Reverse Proxy, nicht im Container (der App-Port spricht
 nur HTTP).
 
 1. **Hostname:** eigene Domain mit A-Record (bei IPv6 zusätzlich AAAA) auf die
-   öffentliche IP; bei **dynamischer IP** einen Dynamic-DNS-Updater nutzen
+   öffentliche IP; bei dynamischer IP einen Dynamic-DNS-Updater nutzen
    (Registrar-API, Synology-DDNS mit eigenem Anbieter oder Cloudflare-Token),
    sonst zeigt der Record ins Leere. Ohne Domain: DSM → Systemsteuerung →
    Externer Zugriff → **DDNS** → Anbieter „Synology", z. B.
    `meinclub.synology.me` (kostenlos, aktualisiert die IP automatisch).
-2. **Router:** Port **80 und 443** auf die NAS weiterleiten (80 nur für die
-   Let's-Encrypt-Prüfung, 443 für die App). Den App-Port **nicht** nach außen öffnen.
+2. **Router:** Port 80 und 443 auf die NAS weiterleiten (80 nur für die
+   Let's-Encrypt-Prüfung, 443 für die App). Den App-Port nicht nach außen öffnen.
 3. **Zertifikat:** Systemsteuerung → Sicherheit → **Zertifikat** → Hinzufügen →
    „Von Let's Encrypt beziehen" für den Hostnamen.
 4. **Reverse Proxy:** Systemsteuerung → Anmeldeportal → Reverse Proxy → Erstellen:
    - Quelle: `https://<dein-hostname>:443` (HSTS aktivieren)
    - Ziel: `http://localhost:<APP_PORT>` (Host-Port aus `.env`)
    Dem Eintrag das Zertifikat zuweisen.
-5. Aufrufen: `https://<dein-hostname>` — **nicht** die LAN-IP.
+5. Aufrufen: `https://<dein-hostname>`, nicht die LAN-IP.
 
 Wichtig:
 
 - Der Aufruf muss über den Hostnamen laufen. Clients im selben WLAN brauchen
-  dafür **NAT-Loopback** (Hairpin) am Router, sonst den Hostnamen lokal per DNS
+  dafür NAT-Loopback (Hairpin) am Router, sonst den Hostnamen lokal per DNS
   auf die NAS-IP auflösen.
 - **HTTPS ist Pflicht** für Web NFC und Kamera. `http://` im WLAN ist kein Secure
-  Context — Android/iPhone verweigern dann NFC bzw. `getUserMedia`.
+  Context: Android/iPhone verweigern dann NFC bzw. `getUserMedia`.
 - Das Session-Cookie ist `Secure` (gesetzt bei `NODE_ENV=production`). Über reines
   HTTP schlägt der Login deshalb fehl. Immer über die HTTPS-URL arbeiten.
-- **Gerätetests (Android NFC, iPhone QR) laufen gegen die NAS-HTTPS-URL**, nicht
+- Gerätetests (Android NFC, iPhone QR) laufen gegen die NAS-HTTPS-URL, nicht
   gegen den Dev-Rechner.
 - HSTS am Proxy setzen (nicht doppelt in der App).
 - **Ohne Internet-Freigabe** (App soll nur im LAN erreichbar sein): eigenes
@@ -193,7 +193,7 @@ sh uninstall.sh            # Container entfernen, Daten und .env bleiben
 sh uninstall.sh --purge    # zusaetzlich DB-Volume und .env loeschen (ENDGUELTIG)
 ```
 
-- Ohne Option bleiben Datenbank-Volume, `.env` und `backups/` erhalten — ein
+- Ohne Option bleiben Datenbank-Volume, `.env` und `backups/` erhalten. Ein
   späteres `sh install.sh` macht weiter.
 - `--purge` verlangt das Eintippen von `LOESCHEN` und entfernt alle Karten, Fotos
   und den Admin-Zugang. `backups/` bleibt erhalten.
@@ -201,7 +201,7 @@ sh uninstall.sh --purge    # zusaetzlich DB-Volume und .env loeschen (ENDGUELTIG
 
 ## Passwort ändern
 
-Eingeloggt unter `/admin/password`. Das Env-`ADMIN_PASSWORD` dient nur der Erstanlage; danach zählt der DB-Hash.
+Eingeloggt unter `/admin/password`. Das Env-`ADMIN_PASSWORD` gilt nur für die Erstanlage; danach zählt der DB-Hash.
 
 ## Backup
 

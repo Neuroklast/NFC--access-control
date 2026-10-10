@@ -1,4 +1,4 @@
-# Feature Spec — Admin Login & Kartenpflege
+# Feature Spec: Admin Login & Kartenpflege
 
 - Feature: Admin-Login + Cardholder CRUD
 - Issue/ticket: —

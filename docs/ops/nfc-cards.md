@@ -1,4 +1,4 @@
-# Ops — NFC und QR
+# Ops: NFC und QR
 
 ## Was auf der Karte stehen muss
 
@@ -21,7 +21,7 @@ Nur im Demo-Modus (ohne `DATABASE_URL`):
 | `DEMO-BLOCKED` | Rot, kein Name |
 
 Test-QR-Codes zeigt die Seite **`/demo`** (nur im Demo-Modus erreichbar). Der QR-Inhalt ist die UID
-als reiner Text — **keine URL**.
+als reiner Text, keine URL.
 
 Fertige Dateien zum Ausdrucken: `public/demo/demo-active.png` und `demo-blocked.png`
 (im Betrieb erreichbar unter `/demo/demo-active.png`). Neu erzeugen und prüfen:
@@ -35,7 +35,7 @@ node scripts/verify-demo-qr.mjs
 
 - Ergebnis-Screen (grün/rot) hat **„Weiter scannen"** zum sofortigen Zurücksetzen.
 - Ohne Tippen springt der Scanner nach 5 Sekunden zurück.
-- Abgelehnte Scans zeigen **nie** einen Namen.
+- Abgelehnte Scans zeigen nie einen Namen.
 - Desktop-Tests: UID in „Karten-UID manuell" eintippen.
 
 ## HTTPS
