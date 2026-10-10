@@ -130,7 +130,9 @@ Windows-Kopie daher vorher `sed -i 's/\r$//' .env` ausführen.
    - `SESSION_SECRET` ≥ 32 Zeichen: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
    - `POSTGRES_PASSWORD` zufällig, ≥ 16 Zeichen
    - `ADMIN_EMAIL` und `ADMIN_PASSWORD` (≥ 12 Zeichen)
-3. `docker compose up -d --build`
+3. `docker compose pull && docker compose up -d` — fertiges Image von
+   `ghcr.io/neuroklast/nfc--access-control` (kein Build auf der NAS). Aus dem
+   Quellcode stattdessen `docker compose up -d --build`.
 
 Beim Start läuft `prisma migrate deploy`, danach `scripts/ensure-admin.mjs` (legt den Admin **nur** an, wenn noch keiner existiert). Demo-Karten nur mit `SEED_DEMO=1`.
 
