@@ -40,3 +40,13 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.image.outputs.tags }}
+
+      # Der Fehler war zur Laufzeit: die CLI fand "effect" nicht. Der Build
+      # allein beweist das nicht, deshalb die CLI im Image wirklich starten.
+      - name: Smoke-test prisma CLI
+        env:
+          TAGS: ${{ steps.image.outputs.tags }}
+        run: |
+          img="${TAGS%%,*}"
+          docker pull "$img"
+          docker run --rm "$img" node node_modules/prisma/build/index.js --version
