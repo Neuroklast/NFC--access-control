@@ -16,9 +16,18 @@ jobs:
       - uses: actions/checkout@v4
 
       # GHCR verlangt einen kleingeschriebenen Image-Namen.
-      - name: Image name
+      # Branch-Namen koennen "/" enthalten - ungueltig als Docker-Tag.
+      # "latest" nur fuer main/Tags, damit Test-Builds es nicht ueberschreiben.
+      - name: Image tags
         id: image
-        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+        run: |
+          name="ghcr.io/${GITHUB_REPOSITORY,,}"
+          tag="${GITHUB_REF_NAME//\//-}"
+          tags="${name}:${tag}"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] || [ "${GITHUB_REF_NAME}" = "main" ]; then
+            tags="${tags},${name}:latest"
+          fi
+          echo "tags=${tags}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/login-action@v3
         with:
@@ -30,6 +39,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
-            ${{ steps.image.outputs.name }}:latest
-            ${{ steps.image.outputs.name }}:${{ github.ref_name }}
+          tags: ${{ steps.image.outputs.tags }}
