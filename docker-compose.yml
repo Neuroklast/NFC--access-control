@@ -18,6 +18,9 @@ services:
       - "${DB_BIND:-127.0.0.1}:${DB_PORT:-5432}:5432"
 
   app:
+    # Fertiges Image von GitHub; auf der NAS: docker compose pull && docker compose up -d
+    # statt lokal zu bauen. Mit --build wird weiterhin aus dem Quellcode gebaut.
+    image: ghcr.io/neuroklast/nfc--access-control:latest
     build: .
     ports:
       - "${APP_PORT:-3000}:3000"
