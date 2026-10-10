@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CheckIcon, NfcIcon, QrCodeIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,16 @@ export function ScannerScreen() {
   const [manualUid, setManualUid] = useState("");
   const [manualError, setManualError] = useState<string | null>(null);
   const [showManual, setShowManual] = useState(false);
+  // Secure Context / NFC-Support erst auf dem Client lesen (Server kennt window
+  // nicht). "" = noch unbekannt, sonst "nfc,secure" - kein Hydration-Mismatch.
+  const support = useSyncExternalStore(
+    () => () => {},
+    () => `${nfcSupported() ? "1" : "0"}${window.isSecureContext ? "1" : "0"}`,
+    () => "",
+  );
+  const known = support !== "";
+  const nfc = known && support[0] === "1";
+  const secure = known && support[1] === "1";
   const abortRef = useRef<AbortController | null>(null);
   const resetRef = useRef<number | null>(null);
   const verifyAbortRef = useRef<AbortController | null>(null);
@@ -146,7 +156,9 @@ export function ScannerScreen() {
     if (!nfcSupported() || !window.NDEFReader) {
       setStatus({
         kind: "error",
-        message: "NFC wird auf diesem Gerät nicht unterstützt. Bitte QR-Code scannen oder UID eingeben.",
+        message: window.isSecureContext
+          ? "NFC wird auf diesem Gerät nicht unterstützt. Bitte QR-Code scannen oder UID eingeben."
+          : "NFC benötigt HTTPS. Bitte UID manuell eingeben.",
       });
       return;
     }
@@ -224,7 +236,9 @@ export function ScannerScreen() {
         if (!cancelled) {
           setStatus({
             kind: "error",
-            message: "Kamera nicht verfügbar. Bitte UID manuell eingeben.",
+            message: window.isSecureContext
+              ? "Kamera nicht verfügbar. Bitte UID manuell eingeben."
+              : "Kamera benötigt HTTPS. Bitte UID manuell eingeben.",
           });
         }
       }
@@ -318,9 +332,13 @@ export function ScannerScreen() {
                     ? "Keine Verbindung zum Server"
                     : status.kind === "error"
                       ? status.message
-                      : nfcSupported()
+                      : !known
                         ? "Bereit zum Scannen"
-                        : "NFC nicht verfügbar. QR-Code scannen oder UID eingeben."}
+                        : !secure
+                          ? "NFC und Kamera benötigen HTTPS. Bitte UID manuell eingeben."
+                          : nfc
+                            ? "Bereit zum Scannen"
+                            : "NFC nicht verfügbar. QR-Code scannen oder UID eingeben."}
             </p>
           </div>
 
