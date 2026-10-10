@@ -45,7 +45,7 @@ Lokal: `.env` ohne `DATABASE_URL` anlegen und `npm run dev`. Auf Vercel: einfach
 
 ## Betrieb
 
-- **HTTPS ist Pflicht** für Web NFC und Kamera. TLS terminiert am Synology Reverse Proxy — siehe [docs/ops/synology.md](docs/ops/synology.md). `http://` im WLAN reicht nicht.
+- **HTTPS ist Pflicht** für Web NFC und Kamera. Über eine reine LAN-IP geht das **nie** — es braucht einen **Hostnamen** mit gültigem Zertifikat: eigene Domain oder Synology-DDNS (`*.synology.me`), dann Let's-Encrypt-Zertifikat + DSM-Reverse-Proxy `https://<hostname>` → `http://localhost:<APP_PORT>`. Schritt für Schritt: [docs/ops/synology.md](docs/ops/synology.md). `http://` im WLAN reicht nicht; die App weist bei fehlendem HTTPS darauf hin.
 - **Gerätetests** (Android NFC, iPhone QR) laufen gegen die NAS-HTTPS-URL: [docs/testing/device-matrix.md](docs/testing/device-matrix.md).
 - **Backup:** `backup.bat` bzw. `scripts/backup.sh` — siehe [docs/ops/backup-restore.md](docs/ops/backup-restore.md).
 - **Update (NAS):** `sh update.sh` holt die neueste Version von GitHub (git fetch + Fast-Forward), erstellt ein DB-Backup (außer mit `--no-backup`) und baut die Container neu — siehe [docs/ops/synology.md](docs/ops/synology.md).
