@@ -23,3 +23,9 @@ export async function verifyPhotoToken(token: string): Promise<string | null> {
     return null;
   }
 }
+
+// The token subject must equal the cardholder in the URL, or one staff member's
+// token would unlock every other photo.
+export function photoTokenMatches(subject: string | null, cardholderId: string): boolean {
+  return subject !== null && subject === cardholderId;
+}

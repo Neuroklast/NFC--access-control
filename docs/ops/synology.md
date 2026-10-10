@@ -8,17 +8,21 @@
    `git clone <repo-url> /volume1/docker/nfc-access-control`
 3. Installer ausführen:
    `cd /volume1/docker/nfc-access-control && sh install.sh`
-4. Der Installer fragt interaktiv nach:
-   - **Admin-E-Mail** und **Admin-Passwort** (leer = automatisch generieren)
-   - **Demo-Karten** (j/n)
-   - **Host-Port der App** (Default 3000)
-   - ob **Postgres im LAN** erreichbar sein soll (Default: nein, nur lokal)
-   Danach erzeugt er `.env`, baut und startet die Container und zeigt am Ende
-   Admin-Login, Passwort und Ports an. Bei einer **bestehenden Installation**
-   (vorhandene `.env`) bleiben Admin-Zugang, DB-Passwort und Session-Secret erhalten
-   — es werden nur Demo und Ports abgefragt.
+4. Der Installer führt in nummerierten Schritten durch die Einrichtung:
+   - **Schritt 1:** Voraussetzungen prüfen (Docker, Compose, Port frei, Speicher).
+   - **Schritt 2:** **Admin-E-Mail** und **Admin-Passwort** (leer = automatisch
+     generieren), **Demo-Karten** (j/n), **Host-Port der App** (Default 3000),
+     ob **Postgres im LAN** erreichbar sein soll (Default: nein, nur lokal).
+   - **Schritt 3–4:** `.env` erzeugen, Container bauen/starten.
+   - **Schritt 5:** Warten und **verifizieren**: DB erreichbar (`/api/v1/health`),
+     Admin-Login, bei Demo zusätzlich die Karte `DEMO-ACTIVE`.
+   - **Schritt 6–7:** **LAN-Adresse** ermitteln und Zusammenfassung ausgeben
+     (Scanner- und Admin-URL, Login, Passwort, HTTPS-Anleitung).
+   Bei einer **bestehenden Installation** (vorhandene `.env`) bleiben Admin-Zugang,
+   DB-Passwort und Session-Secret erhalten — es werden nur Demo und Ports abgefragt.
 5. **HTTPS** über den DSM Reverse Proxy einrichten (siehe unten) und die App danach
-   über die HTTPS-URL aufrufen.
+   über die HTTPS-URL aufrufen. Ohne HTTPS funktionieren NFC und Kamera nicht; der
+   Installer weist am Ende darauf hin.
 
 Hinweise:
 
@@ -143,6 +147,30 @@ Wichtig:
 - Das Session-Cookie ist `Secure` (gesetzt bei `NODE_ENV=production`). Über reines HTTP schlägt der Login deshalb fehl. Immer über die HTTPS-URL arbeiten.
 - **Gerätetests (Android NFC, iPhone QR) laufen gegen die NAS-HTTPS-URL**, nicht gegen den Dev-Rechner.
 - HSTS am Proxy setzen (nicht doppelt in der App).
+
+## Health-Endpunkt
+
+`GET /api/v1/health` liefert ohne Login:
+
+```json
+{ "status": "ok", "db": true, "admin": true, "demo": false, "version": "0.1.0" }
+```
+
+`db:false` (Status `503`) heißt: Datenbank nicht erreichbar. `admin:false` heißt:
+noch kein Admin angelegt. `install.sh` und `update.sh` warten auf `db:true`.
+
+## Deinstallieren / Zurücksetzen
+
+```sh
+sh uninstall.sh            # Container entfernen, Daten und .env bleiben
+sh uninstall.sh --purge    # zusaetzlich DB-Volume und .env loeschen (ENDGUELTIG)
+```
+
+- Ohne Option bleiben Datenbank-Volume, `.env` und `backups/` erhalten — ein
+  späteres `sh install.sh` macht weiter.
+- `--purge` verlangt das Eintippen von `LOESCHEN` und entfernt alle Karten, Fotos
+  und den Admin-Zugang. `backups/` bleibt erhalten.
+- Nicht-interaktiv: `FORCE=1` (normal) bzw. `FORCE_PURGE=1` (mit Volumes).
 
 ## Passwort ändern
 

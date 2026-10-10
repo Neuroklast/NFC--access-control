@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth/session";
 import { cardholderCreateSchema, serializeCardholder } from "@/lib/cardholders/schema";
+import { BodyTooLargeError, readJsonBody } from "@/lib/http/body";
 import { problemResponse } from "@/lib/http/problem";
 import { ConflictError, getStore } from "@/lib/store";
 
@@ -29,8 +30,11 @@ export async function POST(request: Request) {
 
   let json: unknown;
   try {
-    json = await request.json();
-  } catch {
+    json = await readJsonBody(request);
+  } catch (error) {
+    if (error instanceof BodyTooLargeError) {
+      return problemResponse(413, "Payload too large", "Anfrage zu gross.", INSTANCE);
+    }
     return problemResponse(400, "Bad request", "JSON-Body erwartet.", INSTANCE);
   }
 

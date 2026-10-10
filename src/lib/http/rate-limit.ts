@@ -1,6 +1,25 @@
 type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
+// Keeps memory bounded if the caller sends many different keys.
+const MAX_KEYS = 10_000;
+
+function prune(now: number): void {
+  for (const [key, bucket] of buckets) {
+    if (bucket.resetAt <= now) {
+      buckets.delete(key);
+    }
+  }
+  let overflow = buckets.size - MAX_KEYS;
+  if (overflow > 0) {
+    for (const key of buckets.keys()) {
+      buckets.delete(key);
+      if (--overflow <= 0) {
+        break;
+      }
+    }
+  }
+}
 
 export function rateLimit(
   key: string,
@@ -8,6 +27,7 @@ export function rateLimit(
   windowMs: number,
 ): { ok: true } | { ok: false; retryAfter: number } {
   const now = Date.now();
+  prune(now);
   const current = buckets.get(key);
   if (!current || current.resetAt <= now) {
     buckets.set(key, { count: 1, resetAt: now + windowMs });

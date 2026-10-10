@@ -4,7 +4,7 @@ PWA für Einlasspersonal, um zu prüfen, ob jemand Club-Mitarbeiter ist. Admin-U
 
 ## Quick start
 
-Windows: `start.bat` doppelklicken. Erzeugt beim ersten Lauf `.env` mit Zufallswerten, baut, startet, seedet und öffnet den Browser. Das Admin-Passwort wird einmal angezeigt.
+Windows: `start.bat` doppelklicken. Fragt Admin-E-Mail/Passwort, Demo-Karten und Port ab, erzeugt `.env` mit Zufallswerten, baut, startet, verifiziert Login und Karte und öffnet den Browser. Das Admin-Passwort wird einmal angezeigt.
 
 Manuell:
 
@@ -13,7 +13,7 @@ cp .env.example .env   # Werte selbst setzen, siehe Kommentare
 docker compose up -d --build
 ```
 
-Synology NAS (SSH): `sh install.sh` — guided: fragt Admin-E-Mail/Passwort, Demo-Karten und Ports ab, erzeugt `.env`, baut/startet und zeigt Login und Ports. Updates holen: `sh update.sh` (git fetch + Fast-Forward + Neubau, `.env` bleibt erhalten). Details: [docs/ops/synology.md](docs/ops/synology.md).
+Synology NAS (SSH): `sh install.sh` — geführt in 7 Schritten: prüft Voraussetzungen, fragt Admin-E-Mail/Passwort, Demo-Karten und Ports ab, erzeugt `.env`, baut/startet, **verifiziert** DB + Login + Karte, ermittelt die **LAN-Adresse** und zeigt URLs, Login, Passwort und die HTTPS-Anleitung. Updates holen: `sh update.sh` (git fetch + Fast-Forward + Neubau, `.env` bleibt erhalten). Entfernen/Reset: `sh uninstall.sh [--purge]`. Details: [docs/ops/synology.md](docs/ops/synology.md).
 
 Keine Defaults: `SESSION_SECRET`, `POSTGRES_PASSWORD` und `ADMIN_PASSWORD` müssen gesetzt sein. `scripts/ensure-admin.mjs` legt den Admin nur an, wenn noch keiner existiert.
 

@@ -24,9 +24,12 @@ export function problemResponse(
 export function clientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) {
-      return first;
+    // The last hop is the one the nearest proxy appended; earlier values are
+    // caller-supplied and must not be trusted.
+    const parts = forwarded.split(",");
+    const last = parts[parts.length - 1]?.trim();
+    if (last) {
+      return last;
     }
   }
   return "unknown";

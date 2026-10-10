@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/auth/session";
-import { cardholderPatchSchema, serializeCardholder } from "@/lib/cardholders/schema";
+import { cardholderPatchSchema, isUuid, serializeCardholder } from "@/lib/cardholders/schema";
+import { BodyTooLargeError, readJsonBody } from "@/lib/http/body";
 import { problemResponse } from "@/lib/http/problem";
 import { ConflictError, getStore } from "@/lib/store";
 
@@ -18,6 +19,9 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!session) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", instance(id));
   }
+  if (!isUuid(id)) {
+    return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
+  }
 
   const row = await getStore().findCardholder(id);
   if (!row) {
@@ -33,10 +37,17 @@ export async function PATCH(request: Request, context: RouteContext) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", instance(id));
   }
 
+  if (!isUuid(id)) {
+    return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
+  }
+
   let json: unknown;
   try {
-    json = await request.json();
-  } catch {
+    json = await readJsonBody(request);
+  } catch (error) {
+    if (error instanceof BodyTooLargeError) {
+      return problemResponse(413, "Payload too large", "Anfrage zu gross.", instance(id));
+    }
     return problemResponse(400, "Bad request", "JSON-Body erwartet.", instance(id));
   }
 
@@ -70,6 +81,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const { id } = await context.params;
   if (!session) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", instance(id));
+  }
+  if (!isUuid(id)) {
+    return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
   }
 
   const deleted = await getStore().deleteCardholder(id);

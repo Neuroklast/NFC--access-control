@@ -1,4 +1,4 @@
-const CACHE = "nfc-club-access-v1";
+const CACHE = "nfc-club-access-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -21,6 +21,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request).then((hit) => hit ?? caches.match("/"))),
+    fetch(event.request).catch(async () => {
+      const hit = await caches.match(event.request);
+      if (hit) {
+        return hit;
+      }
+      // No cached copy for this URL: report the failure instead of showing the
+      // scanner page in its place.
+      return Response.error();
+    }),
   );
 });

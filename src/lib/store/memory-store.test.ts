@@ -14,6 +14,7 @@ describe("memory store", () => {
     expect(blocked?.isActive).toBe(false);
 
     expect(await store.verifyLookup("UNKNOWN")).toBeNull();
+    expect(await store.countAdmins()).toBe(1);
   });
 
   it("should reject a duplicate card uid", async () => {

@@ -2,6 +2,10 @@ import { z } from "zod";
 
 export const CARDHOLDER_ROLES = ["admin", "security", "staff", "vip"] as const;
 
+export function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 export const cardUidSchema = z
   .string()
   .trim()
@@ -17,7 +21,7 @@ export const verifyCardBodySchema = z
 
 export const loginBodySchema = z
   .object({
-    email: z.string().trim().email().max(320),
+    email: z.string().trim().toLowerCase().email().max(320),
     password: z.string().min(1).max(200),
   })
   .strict();

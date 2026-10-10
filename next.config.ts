@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
+import pkg from "./package.json";
 
 const nextConfig: NextConfig = {
   output: process.env.VERCEL ? undefined : "standalone",
+  env: { APP_VERSION: pkg.version },
   poweredByHeader: false,
   serverExternalPackages: ["sharp"],
   async headers() {

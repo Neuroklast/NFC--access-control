@@ -2,6 +2,7 @@ import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "@/lib/auth/constants";
 import { secretKey } from "@/lib/auth/secret";
+import { getStore } from "@/lib/store";
 
 export { SESSION_COOKIE };
 const MAX_AGE_SECONDS = 60 * 60 * 12;
@@ -9,6 +10,7 @@ const MAX_AGE_SECONDS = 60 * 60 * 12;
 export type SessionPayload = {
   sub: string;
   email: string;
+  sv: number;
 };
 
 export async function createSessionToken(payload: SessionPayload): Promise<string> {
@@ -22,10 +24,14 @@ export async function createSessionToken(payload: SessionPayload): Promise<strin
 export async function readSessionToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey());
-    if (typeof payload.sub !== "string" || typeof payload.email !== "string") {
+    if (
+      typeof payload.sub !== "string" ||
+      typeof payload.email !== "string" ||
+      typeof payload.sv !== "number"
+    ) {
       return null;
     }
-    return { sub: payload.sub, email: payload.email };
+    return { sub: payload.sub, email: payload.email, sv: payload.sv };
   } catch {
     return null;
   }
@@ -54,5 +60,13 @@ export async function getSession(): Promise<SessionPayload | null> {
   if (!token) {
     return null;
   }
-  return readSessionToken(token);
+  const payload = await readSessionToken(token);
+  if (!payload) {
+    return null;
+  }
+  const admin = await getStore().findAdminById(payload.sub);
+  if (!admin || admin.sessionVersion !== payload.sv) {
+    return null;
+  }
+  return payload;
 }

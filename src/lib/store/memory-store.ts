@@ -72,10 +72,10 @@ async function seed(): Promise<void> {
     });
   }
 
-  const email = process.env.ADMIN_EMAIL ?? "admin@club.local";
+  const email = (process.env.ADMIN_EMAIL ?? "admin@club.local").toLowerCase();
   const password = process.env.ADMIN_PASSWORD ?? DEMO_PASSWORD;
   const id = crypto.randomUUID();
-  store.admins.set(id, { id, email, passwordHash: await hashPassword(password) });
+  store.admins.set(id, { id, email, passwordHash: await hashPassword(password), sessionVersion: 0 });
 }
 
 async function ready(): Promise<MemoryDb> {
@@ -217,7 +217,8 @@ export function createMemoryStore(): Store {
 
     async findAdminByEmail(email: string): Promise<AdminRecord | null> {
       const store = await ready();
-      return [...store.admins.values()].find((admin) => admin.email === email) ?? null;
+      const needle = email.toLowerCase();
+      return [...store.admins.values()].find((admin) => admin.email.toLowerCase() === needle) ?? null;
     },
 
     async findAdminById(id: string): Promise<AdminRecord | null> {
@@ -231,6 +232,22 @@ export function createMemoryStore(): Store {
       if (admin) {
         store.admins.set(id, { ...admin, passwordHash });
       }
+    },
+
+    async bumpSessionVersion(id: string): Promise<number | null> {
+      const store = await ready();
+      const admin = store.admins.get(id);
+      if (!admin) {
+        return null;
+      }
+      const sessionVersion = admin.sessionVersion + 1;
+      store.admins.set(id, { ...admin, sessionVersion });
+      return sessionVersion;
+    },
+
+    async countAdmins(): Promise<number> {
+      const store = await ready();
+      return store.admins.size;
     },
   };
 }

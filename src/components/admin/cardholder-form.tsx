@@ -47,16 +47,14 @@ export function CardholderForm({
     return () => URL.revokeObjectURL(preview);
   }, [preview]);
 
-  async function uploadPhoto(cardholderId: string, selected: File) {
+  async function uploadPhoto(cardholderId: string, selected: File): Promise<boolean> {
     const blob = await downscaleImage(selected);
     const response = await fetch(`/api/v1/cardholders/${cardholderId}/photo`, {
       method: "PUT",
       headers: { "Content-Type": "image/jpeg" },
       body: blob,
     });
-    if (!response.ok) {
-      toast.error("Foto konnte nicht gespeichert werden");
-    }
+    return response.ok;
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -80,8 +78,15 @@ export function CardholderForm({
       });
       if (response.status === 201 || response.status === 200) {
         const saved = (await response.json()) as { id: string };
-        if (file) {
-          await uploadPhoto(saved.id, file);
+        if (file && !(await uploadPhoto(saved.id, file))) {
+          toast.error("Karte gespeichert, aber das Foto fehlte. Bitte erneut hochladen.");
+          if (id) {
+            setError("Das Foto konnte nicht gespeichert werden. Bitte erneut hochladen.");
+          } else {
+            router.push(`/admin/cardholders/${saved.id}`);
+            router.refresh();
+          }
+          return;
         }
         toast.success(id ? "Karte gespeichert" : "Karte angelegt");
         router.push("/admin/cardholders");
