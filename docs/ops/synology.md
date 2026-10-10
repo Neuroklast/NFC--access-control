@@ -137,20 +137,43 @@ Beim Start läuft `prisma migrate deploy`, danach `scripts/ensure-admin.mjs` (le
 
 ## HTTPS (Synology Reverse Proxy)
 
-TLS terminiert am Synology Reverse Proxy, nicht im Container.
+Web NFC und Kamera brauchen einen **Secure Context** (HTTPS). Über eine reine
+LAN-IP geht das **nie** — für eine IP gibt es kein vertrauenswürdiges Zertifikat.
+Der Kunde braucht daher einen **Hostnamen** mit gültigem Zertifikat. TLS
+terminiert am Synology Reverse Proxy, nicht im Container (der App-Port spricht
+nur HTTP).
 
-1. DSM → Systemsteuerung → Anmeldeportal → **Reverse Proxy** → Erstellen.
-2. Quelle: `https://nfc.deine-domain.tld:443` (HSTS aktivieren).
-3. Ziel: `http://localhost:<APP_PORT>` (der in `.env` gewählte Host-Port, Default 3000).
-4. Zertifikat: Systemsteuerung → Sicherheit → Zertifikat → Let's Encrypt für die Domain.
-5. Router: Port 443 auf die NAS weiterleiten; den App-Port **nicht** nach außen öffnen.
+1. **Hostname:** eigene Domain mit A-Record (bei IPv6 zusätzlich AAAA) auf die
+   öffentliche IP; bei **dynamischer IP** einen Dynamic-DNS-Updater nutzen
+   (Registrar-API, Synology-DDNS mit eigenem Anbieter oder Cloudflare-Token),
+   sonst zeigt der Record ins Leere. Ohne Domain: DSM → Systemsteuerung →
+   Externer Zugriff → **DDNS** → Anbieter „Synology", z. B.
+   `meinclub.synology.me` (kostenlos, aktualisiert die IP automatisch).
+2. **Router:** Port **80 und 443** auf die NAS weiterleiten (80 nur für die
+   Let's-Encrypt-Prüfung, 443 für die App). Den App-Port **nicht** nach außen öffnen.
+3. **Zertifikat:** Systemsteuerung → Sicherheit → **Zertifikat** → Hinzufügen →
+   „Von Let's Encrypt beziehen" für den Hostnamen.
+4. **Reverse Proxy:** Systemsteuerung → Anmeldeportal → Reverse Proxy → Erstellen:
+   - Quelle: `https://<dein-hostname>:443` (HSTS aktivieren)
+   - Ziel: `http://localhost:<APP_PORT>` (Host-Port aus `.env`)
+   Dem Eintrag das Zertifikat zuweisen.
+5. Aufrufen: `https://<dein-hostname>` — **nicht** die LAN-IP.
 
 Wichtig:
 
-- **HTTPS ist Pflicht** für Web NFC und Kamera. `http://` im WLAN ist kein Secure Context — Android/iPhone verweigern dann NFC bzw. `getUserMedia`.
-- Das Session-Cookie ist `Secure` (gesetzt bei `NODE_ENV=production`). Über reines HTTP schlägt der Login deshalb fehl. Immer über die HTTPS-URL arbeiten.
-- **Gerätetests (Android NFC, iPhone QR) laufen gegen die NAS-HTTPS-URL**, nicht gegen den Dev-Rechner.
+- Der Aufruf muss über den Hostnamen laufen. Clients im selben WLAN brauchen
+  dafür **NAT-Loopback** (Hairpin) am Router, sonst den Hostnamen lokal per DNS
+  auf die NAS-IP auflösen.
+- **HTTPS ist Pflicht** für Web NFC und Kamera. `http://` im WLAN ist kein Secure
+  Context — Android/iPhone verweigern dann NFC bzw. `getUserMedia`.
+- Das Session-Cookie ist `Secure` (gesetzt bei `NODE_ENV=production`). Über reines
+  HTTP schlägt der Login deshalb fehl. Immer über die HTTPS-URL arbeiten.
+- **Gerätetests (Android NFC, iPhone QR) laufen gegen die NAS-HTTPS-URL**, nicht
+  gegen den Dev-Rechner.
 - HSTS am Proxy setzen (nicht doppelt in der App).
+- **Ohne Internet-Freigabe** (App soll nur im LAN erreichbar sein): eigenes
+  Zertifikat aus einer lokalen CA (`mkcert`) erstellen und die CA auf den
+  Diensthandys installieren, oder einen Tunnel mit echtem Zertifikat verwenden.
 
 ## Health-Endpunkt
 
