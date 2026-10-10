@@ -15,9 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # GHCR verlangt einen kleingeschriebenen Image-Namen.
-      # Branch-Namen koennen "/" enthalten - ungueltig als Docker-Tag.
-      # "latest" nur fuer main/Tags, damit Test-Builds es nicht ueberschreiben.
+      # GHCR braucht lowercase; Branch-Namen koennen "/" enthalten (ungueltig
+      # als Docker-Tag, daher ersetzt). "latest" nur fuer main/Tags, damit
+      # Test-Builds es nicht ueberschreiben.
       - name: Image tags
         id: image
         run: |
@@ -42,11 +42,12 @@ jobs:
           tags: ${{ steps.image.outputs.tags }}
 
       # Der Fehler war zur Laufzeit: die CLI fand "effect" nicht. Der Build
-      # allein beweist das nicht, deshalb die CLI im Image wirklich starten.
-      - name: Smoke-test prisma CLI
+      # allein beweist das nicht, deshalb die Module im Image wirklich laden.
+      - name: Smoke-test image modules
         env:
           TAGS: ${{ steps.image.outputs.tags }}
         run: |
           img="${TAGS%%,*}"
           docker pull "$img"
           docker run --rm "$img" node node_modules/prisma/build/index.js --version
+          docker run --rm "$img" node -e "require('@prisma/client'); require('bcryptjs')"
