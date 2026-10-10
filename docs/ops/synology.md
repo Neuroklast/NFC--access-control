@@ -4,8 +4,10 @@
 
 1. In DSM den **Container Manager** (Docker) installieren und SSH aktivieren
    (Systemsteuerung → Terminal & SNMP).
-2. Repo auf die NAS legen, z. B.:
-   `git clone <repo-url> /volume1/docker/nfc-access-control`
+2. App-Ordner auf die NAS legen:
+   - Git: `git clone <repo-url> /volume1/docker/nfc-access-control`
+   - Oder das Release-ZIP (`nfc-access-control-*.zip`) nach
+     `/volume1/docker/nfc-access-control` entpacken.
 3. Installer ausführen:
    `cd /volume1/docker/nfc-access-control && sh install.sh`
 4. Der Installer führt in nummerierten Schritten durch die Einrichtung:
@@ -77,8 +79,9 @@ Hinweise:
 
 - Voraussetzung ist ein per `git clone` angelegtes Repo mit Remote `origin` über
   **HTTPS oder SSH** (unsichere Protokolle wie `http://`/`git://` werden
-  abgelehnt). Eine über File Station kopierte Installation ohne `.git` lässt
-  sich nicht aktualisieren.
+  abgelehnt). Eine über File Station oder Release-ZIP kopierte Installation
+  ohne `.git` lässt sich nicht per `update.sh` aktualisieren — neues ZIP
+  darüber entpacken und `sh install.sh` bzw. `docker compose up -d --build`.
 - Lokale Änderungen an versionierten Dateien **und** lokale, nicht gepushte
   Commits brechen das Update ab (nur der Remote-Stand wird gebaut). `.env` und
   `backups/` sind ignoriert und stören nicht.

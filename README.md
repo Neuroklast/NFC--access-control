@@ -13,7 +13,7 @@ cp .env.example .env   # Werte selbst setzen, siehe Kommentare
 docker compose up -d --build
 ```
 
-Synology NAS (SSH): `sh install.sh` — geführt in 7 Schritten: prüft Voraussetzungen, fragt Admin-E-Mail/Passwort, Demo-Karten und Ports ab, erzeugt `.env`, baut/startet, **verifiziert** DB + Login + Karte, ermittelt die **LAN-Adresse** und zeigt URLs, Login, Passwort und die HTTPS-Anleitung. Updates holen: `sh update.sh` (git fetch + Fast-Forward + Neubau, `.env` bleibt erhalten). Entfernen/Reset: `sh uninstall.sh [--purge]`. Details: [docs/ops/synology.md](docs/ops/synology.md).
+Synology NAS (SSH): Release-ZIP entpacken oder `git clone`, dann `sh install.sh` — geführt in 7 Schritten: prüft Voraussetzungen, fragt Admin-E-Mail/Passwort, Demo-Karten und Ports ab, erzeugt `.env`, baut/startet, **verifiziert** DB + Login + Karte, ermittelt die **LAN-Adresse** und zeigt URLs, Login, Passwort und die HTTPS-Anleitung. Updates: `sh update.sh` (nur bei Git-Clone) oder neues Release-ZIP. Entfernen/Reset: `sh uninstall.sh [--purge]`. Details: [docs/ops/synology.md](docs/ops/synology.md).
 
 Keine Defaults: `SESSION_SECRET`, `POSTGRES_PASSWORD` und `ADMIN_PASSWORD` müssen gesetzt sein. `scripts/ensure-admin.mjs` legt den Admin nur an, wenn noch keiner existiert.
 

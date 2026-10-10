@@ -6,3 +6,10 @@
 # .env-Vorlage und Compose-YAML mit LF (CRLF wuerde Werte verfaelschen).
 .env.example text eol=lf
 *.yml text eol=lf
+
+# Nicht in Source-Archives / Release-ZIPs (GitHub nutzt git archive).
+.gitattributes export-ignore
+AGENTS.md export-ignore
+CLAUDE.md export-ignore
+GEMINI.md export-ignore
+docs/agent-docs export-ignore
