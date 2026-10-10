@@ -35,11 +35,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
-# Ergänzt die Top-Level-Abhängigkeiten der CLI (effect, c12, ...); @prisma bleibt
-# vollständig aus dem Builder, der Merge überschreibt nur gleiche Versionen.
+# Prisma-CLI + vollstaendige Abhaengigkeitskette (effect, c12, ...); @prisma/client
+# kommt aus dem Standalone-Bundle.
 COPY --from=prisma-cli /app/node_modules ./node_modules
 USER nextjs
 EXPOSE 3000
