@@ -15,7 +15,7 @@ docker compose pull && docker compose up -d   # fertiges Image von ghcr.io
 docker compose up -d --build
 ```
 
-Synology NAS (SSH): Release-ZIP entpacken oder `git clone`, dann `sh install.sh` — geführt in 7 Schritten: prüft Voraussetzungen, fragt Admin-E-Mail/Passwort, Demo-Karten und Ports ab, erzeugt `.env`, baut/startet, **verifiziert** DB + Login + Karte, ermittelt die **LAN-Adresse** und zeigt URLs, Login, Passwort und die HTTPS-Anleitung. Updates: `sh update.sh` (nur bei Git-Clone) oder neues Release-ZIP. Ohne lokalen Build: `docker compose pull && docker compose up -d` (fertiges Image von `ghcr.io/neuroklast/nfc--access-control`). Entfernen/Reset: `sh uninstall.sh [--purge]`. Details: [docs/ops/synology.md](docs/ops/synology.md).
+Synology NAS (SSH): Release-ZIP entpacken oder `git clone`, dann `sh install.sh` — geführt in 7 Schritten: prüft Voraussetzungen, fragt Admin-E-Mail/Passwort, Demo-Karten und den App-Port ab, erzeugt `.env`, baut/startet, **verifiziert** DB + Login + Karte, ermittelt die **LAN-Adresse** und zeigt URLs, Login, Passwort und die HTTPS-Anleitung. Updates: `sh update.sh` (nur bei Git-Clone) oder neues Release-ZIP. Ohne lokalen Build: `docker compose pull && docker compose up -d` (fertiges Image von `ghcr.io/neuroklast/nfc--access-control`). Entfernen/Reset: `sh uninstall.sh [--purge]`. Details: [docs/ops/synology.md](docs/ops/synology.md).
 
 Keine Defaults: `SESSION_SECRET`, `POSTGRES_PASSWORD` und `ADMIN_PASSWORD` müssen gesetzt sein. `scripts/ensure-admin.mjs` legt den Admin nur an, wenn noch keiner existiert.
 
@@ -37,7 +37,7 @@ Ohne `DATABASE_URL` startet die App automatisch im **Demo-Modus** (In-Memory, ge
 - Admin: `admin@club.local` / `demo-password-123` (oder `ADMIN_EMAIL`/`ADMIN_PASSWORD`)
 - Daten sind nach einem Neustart weg; `DEMO_MODE=1` erzwingt den Modus auch mit DB.
 
-Lokal: `.env` ohne `DATABASE_URL` anlegen und `npm run dev`. Auf Vercel: einfach deployen.
+Lokal: `.env` ohne `DATABASE_URL` anlegen und `npm run dev`. Auf Vercel: einfach deployen. Ein auf dem Host laufender Prozess erreicht die Docker-DB nicht (Postgres hat keinen Host-Port) — dafür den Demo-Modus nutzen.
 
 ## Checks
 

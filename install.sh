@@ -4,7 +4,7 @@
 #
 # Der Installer führt in nummerierten Schritten durch die Einrichtung:
 #   1) Voraussetzungen prüfen (Docker, Compose, Port, Speicher)
-#   2) Admin-E-Mail/Passwort, Demo-Karten, Ports abfragen
+#   2) Admin-E-Mail/Passwort, Demo-Karten, App-Port abfragen
 #   3) .env erzeugen
 #   4) Container bauen und starten
 #   5) Warten und verifizieren (DB, Admin-Login, Demo-Karte)
@@ -12,12 +12,12 @@
 #   7) Zusammenfassung + nächster Schritt (HTTPS)
 #
 # Bei einer bestehenden Installation (vorhandene .env) bleiben Admin-Zugang,
-# DB-Passwort und Session-Secret erhalten; nur Ports/Demo werden abgefragt.
+# DB-Passwort und Session-Secret erhalten; nur Port und Demo werden abgefragt.
 #
 # Nicht-interaktiv (Automatisierung/CI) per Umgebungsvariablen:
 #   NONINTERACTIVE=1
 #   ADMIN_EMAIL=... ADMIN_PASSWORD=... SEED_DEMO=0|1
-#   APP_PORT=3000 DB_BIND=127.0.0.1 DB_PORT=5432
+#   APP_PORT=3000
 #   FORCE_RECONFIGURE=1  (bestehende .env neu schreiben, Secrets bleiben erhalten)
 
 # CRLF-Schutz: Windows-Kopien enthalten \r und brechen sh-Skripte.
@@ -241,8 +241,6 @@ EXISTING_ADMIN_PW=""
 EXISTING_ADMIN_EMAIL=""
 EXISTING_SEED=""
 EXISTING_APP_PORT=""
-EXISTING_DB_PORT=""
-EXISTING_DB_BIND=""
 
 if [ -f .env ]; then
   HAD_ENV=1
@@ -253,8 +251,6 @@ if [ -f .env ]; then
   EXISTING_ADMIN_EMAIL="$(read_env ADMIN_EMAIL)"
   EXISTING_SEED="$(read_env SEED_DEMO)"
   EXISTING_APP_PORT="$(read_env APP_PORT)"
-  EXISTING_DB_PORT="$(read_env DB_PORT)"
-  EXISTING_DB_BIND="$(read_env DB_BIND)"
 fi
 
 # ===========================================================================
@@ -351,7 +347,7 @@ if [ "$RECONFIGURE" -eq 1 ]; then
   fi
 
   say ""
-  say "--- Demo und Ports ---"
+  say "--- Demo und App-Port ---"
   _seed_default="n"
   if [ "${SEED_DEMO:-${EXISTING_SEED:-0}}" = "1" ]; then _seed_default="j"; fi
   if [ "$(ask_yes_no 'Demo-Karten anlegen (DEMO-ACTIVE/DEMO-BLOCKED)' "$_seed_default")" = "j" ]; then
@@ -362,24 +358,11 @@ if [ "$RECONFIGURE" -eq 1 ]; then
 
   _app_default="${APP_PORT:-${EXISTING_APP_PORT:-3000}}"
   valid_port "$_app_default" || _app_default=3000
-  _db_default="${DB_PORT:-${EXISTING_DB_PORT:-5432}}"
-  valid_port "$_db_default" || _db_default=5432
 
   APP_PORT_ANSWER="$(ask_port 'Host-Port fuer die App' "$_app_default")"
-  _db_lan_default="n"
-  if [ "${DB_BIND:-${EXISTING_DB_BIND:-127.0.0.1}}" = "0.0.0.0" ]; then _db_lan_default="j"; fi
-  if [ "$(ask_yes_no 'Postgres auch im LAN freigeben (nur wenn wirklich noetig)' "$_db_lan_default")" = "j" ]; then
-    DB_BIND_ANSWER=0.0.0.0
-    DB_PORT_ANSWER="$(ask_port 'Host-Port fuer Postgres' "$_db_default")"
-  else
-    DB_BIND_ANSWER=127.0.0.1
-    DB_PORT_ANSWER="$(ask_port 'Host-Port fuer Postgres (nur lokal)' "$_db_default")"
-  fi
 
   export SEED_DEMO="$SEED_DEMO_ANSWER"
   export APP_PORT="$APP_PORT_ANSWER"
-  export DB_BIND="$DB_BIND_ANSWER"
-  export DB_PORT="$DB_PORT_ANSWER"
 else
   say "[INFO] .env vorhanden - wird verwendet."
 fi
@@ -405,7 +388,6 @@ valid_port "$APP_PORT_VALUE" || APP_PORT_VALUE=3000
 ADMIN_EMAIL_VALUE="$(read_env ADMIN_EMAIL)"
 [ -n "$ADMIN_EMAIL_VALUE" ] || ADMIN_EMAIL_VALUE="admin@club.local"
 SEED_DEMO_VALUE="${SEED_DEMO:-$(read_env SEED_DEMO)}"
-DB_BIND_VALUE="${DB_BIND:-$(read_env DB_BIND)}"
 
 # ===========================================================================
 step "Schritt 4/7 - Container bauen und starten"
@@ -532,12 +514,6 @@ if [ "${SEED_DEMO_VALUE:-0}" = "1" ]; then
 fi
 echo " Stoppen      : $COMPOSE down"
 echo "============================================"
-
-if [ "$DB_BIND_VALUE" = "0.0.0.0" ]; then
-  echo ""
-  echo "HINWEIS: Postgres ist im LAN freigegeben. Docker kann die Host-Firewall"
-  echo "         umgehen - Port nicht am Router weiterleiten."
-fi
 
 echo ""
 echo "NAECHSTER PFLICHTSCHRITT - HTTPS (sonst gehen NFC und Kamera nicht):"
