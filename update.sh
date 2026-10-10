@@ -38,6 +38,9 @@ set -eu
 SCRIPT_DIR="${NFC_ORIG_DIR:-$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)}"
 cd "$SCRIPT_DIR"
 
+# shellcheck source=scripts/lib.sh
+. ./scripts/lib.sh
+
 echo "=== NFC Club Access - Update ==="
 
 # --- Optionen ---
@@ -291,13 +294,17 @@ echo "[INFO] Warte auf http://localhost:$APP_PORT_VALUE ..."
 ready=0
 tries=0
 while [ "$tries" -lt 60 ]; do
-  if command -v curl >/dev/null 2>&1; then
-    if curl -fsS -o /dev/null "http://localhost:$APP_PORT_VALUE" 2>/dev/null; then ready=1; break; fi
-  elif command -v wget >/dev/null 2>&1; then
-    if wget -q -O /dev/null "http://localhost:$APP_PORT_VALUE" 2>/dev/null; then ready=1; break; fi
-  elif $COMPOSE ps app 2>/dev/null | grep -qiE 'up|running'; then
+  _hc=0
+  health_ok "$APP_PORT_VALUE" || _hc=$?
+  if [ "$_hc" -eq 0 ]; then
     ready=1
     break
+  fi
+  if [ "$_hc" -eq 2 ]; then
+    if $COMPOSE ps app 2>/dev/null | grep -qiE 'up|running'; then
+      ready=1
+      break
+    fi
   fi
   tries=$((tries + 1))
   sleep 2

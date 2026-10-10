@@ -1,7 +1,9 @@
 import { getSession } from "@/lib/auth/session";
+import { isUuid } from "@/lib/cardholders/schema";
+import { BodyTooLargeError, readLimited } from "@/lib/http/body";
 import { problemResponse } from "@/lib/http/problem";
 import { toOptimizedWebp } from "@/lib/photos/process";
-import { verifyPhotoToken } from "@/lib/photos/token";
+import { photoTokenMatches, verifyPhotoToken } from "@/lib/photos/token";
 import { getStore } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -13,7 +15,7 @@ const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-async function isAuthorized(request: Request): Promise<boolean> {
+async function isAuthorized(request: Request, id: string): Promise<boolean> {
   const session = await getSession();
   if (session) {
     return true;
@@ -22,13 +24,16 @@ async function isAuthorized(request: Request): Promise<boolean> {
   if (!token) {
     return false;
   }
-  return (await verifyPhotoToken(token)) !== null;
+  return photoTokenMatches(await verifyPhotoToken(token), id);
 }
 
 export async function GET(request: Request, context: RouteContext) {
   const { id } = await context.params;
-  if (!(await isAuthorized(request))) {
+  if (!(await isAuthorized(request, id))) {
     return problemResponse(401, "Unauthorized", "Nicht berechtigt.", INSTANCE);
+  }
+  if (!isUuid(id)) {
+    return problemResponse(404, "Not found", "Kein Foto vorhanden.", INSTANCE);
   }
 
   const record = await getStore().getCardholderPhoto(id);
@@ -52,13 +57,25 @@ export async function PUT(request: Request, context: RouteContext) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", INSTANCE);
   }
 
+  if (!isUuid(id)) {
+    return problemResponse(404, "Not found", "Karte nicht gefunden.", INSTANCE);
+  }
+
   const mime = request.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
   if (!ALLOWED_MIME.has(mime)) {
     return problemResponse(422, "Validation failed", "Nur JPEG, PNG oder WebP.", INSTANCE);
   }
 
-  const upload = Buffer.from(await request.arrayBuffer());
-  if (upload.byteLength === 0 || upload.byteLength > MAX_UPLOAD_BYTES) {
+  let upload: Buffer;
+  try {
+    upload = Buffer.from(await readLimited(request, MAX_UPLOAD_BYTES));
+  } catch (error) {
+    if (error instanceof BodyTooLargeError) {
+      return problemResponse(413, "Payload too large", "Bild max. 8 MB.", INSTANCE);
+    }
+    throw error;
+  }
+  if (upload.byteLength === 0) {
     return problemResponse(422, "Validation failed", "Bild max. 8 MB.", INSTANCE);
   }
 
@@ -81,6 +98,9 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const { id } = await context.params;
   if (!session) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", INSTANCE);
+  }
+  if (!isUuid(id)) {
+    return problemResponse(404, "Not found", "Karte nicht gefunden.", INSTANCE);
   }
 
   const cleared = await getStore().clearCardholderPhoto(id);

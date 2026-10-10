@@ -133,21 +133,41 @@ export function createPrismaStore(): Store {
     },
 
     async findAdminByEmail(email: string): Promise<AdminRecord | null> {
-      return prisma.adminUser.findUnique({
-        where: { email },
-        select: { id: true, email: true, passwordHash: true },
+      return prisma.adminUser.findFirst({
+        where: { email: { equals: email, mode: "insensitive" } },
+        select: { id: true, email: true, passwordHash: true, sessionVersion: true },
       });
     },
 
     async findAdminById(id: string): Promise<AdminRecord | null> {
       return prisma.adminUser.findUnique({
         where: { id },
-        select: { id: true, email: true, passwordHash: true },
+        select: { id: true, email: true, passwordHash: true, sessionVersion: true },
       });
     },
 
     async updateAdminPassword(id: string, passwordHash: string): Promise<void> {
       await prisma.adminUser.update({ where: { id }, data: { passwordHash } });
+    },
+
+    async bumpSessionVersion(id: string): Promise<number | null> {
+      try {
+        const row = await prisma.adminUser.update({
+          where: { id },
+          data: { sessionVersion: { increment: 1 } },
+          select: { sessionVersion: true },
+        });
+        return row.sessionVersion;
+      } catch (error) {
+        if (isKnown(error, "P2025")) {
+          return null;
+        }
+        throw error;
+      }
+    },
+
+    async countAdmins(): Promise<number> {
+      return prisma.adminUser.count();
     },
   };
 }

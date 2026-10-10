@@ -6,6 +6,7 @@ import { CardholderForm } from "@/components/admin/cardholder-form";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getSession } from "@/lib/auth/session";
+import { isUuid } from "@/lib/cardholders/schema";
 import { getStore } from "@/lib/store";
 
 export default async function EditCardholderPage({
@@ -19,6 +20,9 @@ export default async function EditCardholderPage({
   }
 
   const { id } = await params;
+  if (!isUuid(id)) {
+    notFound();
+  }
   const row = await getStore().findCardholder(id);
   if (!row) {
     notFound();

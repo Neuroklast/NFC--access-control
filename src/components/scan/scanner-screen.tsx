@@ -38,6 +38,8 @@ export function ScannerScreen() {
   const [showManual, setShowManual] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const resetRef = useRef<number | null>(null);
+  const verifyAbortRef = useRef<AbortController | null>(null);
+  const verifySeq = useRef(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const qrScannerRef = useRef<{ destroy: () => void } | null>(null);
 
@@ -63,6 +65,7 @@ export function ScannerScreen() {
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
+      verifyAbortRef.current?.abort();
       stopQr();
       clearReset();
     };
@@ -74,7 +77,10 @@ export function ScannerScreen() {
         setStatus({ kind: "offline" });
         return;
       }
+      verifyAbortRef.current?.abort();
       const controller = new AbortController();
+      verifyAbortRef.current = controller;
+      const seq = ++verifySeq.current;
       const timeout = window.setTimeout(() => controller.abort(), VERIFY_TIMEOUT_MS);
       try {
         const response = await fetch("/api/v1/card-verifications", {
@@ -83,6 +89,9 @@ export function ScannerScreen() {
           body: JSON.stringify({ card_uid: cardUid }),
           signal: controller.signal,
         });
+        if (seq !== verifySeq.current) {
+          return;
+        }
         if (response.status === 200) {
           const body = (await response.json()) as {
             granted: boolean;
@@ -114,6 +123,9 @@ export function ScannerScreen() {
         }
         setStatus({ kind: "error", message: "Prüfung fehlgeschlagen. Bitte erneut versuchen." });
       } catch (error) {
+        if (seq !== verifySeq.current) {
+          return;
+        }
         if (error instanceof DOMException && error.name === "AbortError") {
           setStatus({ kind: "error", message: "Keine Antwort vom Server. Bitte erneut versuchen." });
           return;
@@ -121,6 +133,9 @@ export function ScannerScreen() {
         setStatus({ kind: "offline" });
       } finally {
         window.clearTimeout(timeout);
+        if (verifyAbortRef.current === controller) {
+          verifyAbortRef.current = null;
+        }
       }
     },
     [scheduleReset],
@@ -222,6 +237,8 @@ export function ScannerScreen() {
   }, [status.kind, stopQr, verifyUid]);
 
   const resetNow = () => {
+    verifySeq.current += 1;
+    verifyAbortRef.current?.abort();
     clearReset();
     setStatus({ kind: "idle" });
   };

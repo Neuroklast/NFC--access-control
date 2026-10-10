@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
-import { getSession } from "@/lib/auth/session";
+import { getSession, setSessionCookie } from "@/lib/auth/session";
+import { BodyTooLargeError, readJsonBody } from "@/lib/http/body";
 import { problemResponse } from "@/lib/http/problem";
 import { getStore } from "@/lib/store";
 
@@ -24,8 +25,11 @@ export async function PATCH(request: Request) {
 
   let json: unknown;
   try {
-    json = await request.json();
-  } catch {
+    json = await readJsonBody(request);
+  } catch (error) {
+    if (error instanceof BodyTooLargeError) {
+      return problemResponse(413, "Payload too large", "Anfrage zu gross.", INSTANCE);
+    }
     return problemResponse(400, "Bad request", "JSON-Body erwartet.", INSTANCE);
   }
 
@@ -51,6 +55,10 @@ export async function PATCH(request: Request) {
 
   const passwordHash = await hashPassword(parsed.data.new_password);
   await getStore().updateAdminPassword(admin.id, passwordHash);
+  const sv = await getStore().bumpSessionVersion(admin.id);
+  if (sv !== null) {
+    await setSessionCookie({ sub: admin.id, email: admin.email, sv });
+  }
 
   return new Response(null, { status: 204 });
 }

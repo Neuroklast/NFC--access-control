@@ -19,6 +19,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: sh -n install.sh update.sh uninstall.sh scripts/lib.sh scripts/init-env.sh scripts/backup.sh
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test

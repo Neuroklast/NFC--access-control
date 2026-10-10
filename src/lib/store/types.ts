@@ -33,6 +33,7 @@ export type AdminRecord = {
   id: string;
   email: string;
   passwordHash: string;
+  sessionVersion: number;
 };
 
 export type PhotoRecord = {
@@ -60,4 +61,6 @@ export interface Store {
   findAdminByEmail(email: string): Promise<AdminRecord | null>;
   findAdminById(id: string): Promise<AdminRecord | null>;
   updateAdminPassword(id: string, passwordHash: string): Promise<void>;
+  bumpSessionVersion(id: string): Promise<number | null>;
+  countAdmins(): Promise<number>;
 }
