@@ -13,8 +13,7 @@
 4. Der Installer führt in nummerierten Schritten durch die Einrichtung:
    - **Schritt 1:** Voraussetzungen prüfen (Docker, Compose, Port frei, Speicher).
    - **Schritt 2:** **Admin-E-Mail** und **Admin-Passwort** (leer = automatisch
-     generieren), **Demo-Karten** (j/n), **Host-Port der App** (Default 3000),
-     ob **Postgres im LAN** erreichbar sein soll (Default: nein, nur lokal).
+     generieren), **Demo-Karten** (j/n), **Host-Port der App** (Default 3000).
    - **Schritt 3–4:** `.env` erzeugen, Container bauen/starten.
    - **Schritt 5:** Warten und **verifizieren**: DB erreichbar (`/api/v1/health`),
      Admin-Login, bei Demo zusätzlich die Karte `DEMO-ACTIVE`.
@@ -31,7 +30,7 @@ Hinweise:
 - Ohne Docker-Rechte `sudo sh install.sh` verwenden. Wird `install.sh` ohne `sudo`
   ausgeführt, `.env` gehört danach dem aufrufenden Nutzer.
 - Nicht-interaktiv (Automatisierung):
-  `NONINTERACTIVE=1 ADMIN_EMAIL=... ADMIN_PASSWORD=... SEED_DEMO=0 APP_PORT=3000 DB_BIND=127.0.0.1 DB_PORT=5432 sh install.sh`.
+  `NONINTERACTIVE=1 ADMIN_EMAIL=... ADMIN_PASSWORD=... SEED_DEMO=0 APP_PORT=3000 sh install.sh`.
   Eine bestehende `.env` wird dabei standardmäßig weiterverwendet; mit
   `FORCE_RECONFIGURE=1` wird sie neu geschrieben (Admin-Zugang, DB-Passwort und
   Session-Secret bleiben erhalten).
@@ -41,10 +40,10 @@ Hinweise:
 - Die Installer-Ausgabe enthält das generierte Admin-Passwort. Nicht in Logs umleiten
   (kein `| tee`) und die Terminal-Historie beachten. Ein selbst gesetztes Passwort
   wird nicht angezeigt.
-- Ports stehen in `.env` (`APP_PORT`, `DB_BIND`, `DB_PORT`) und werden von
-  `docker-compose.yml` gelesen. Default ist nur lokal (`127.0.0.1`).
-  `DB_BIND=0.0.0.0` gibt die DB im LAN frei — **Docker kann die Host-Firewall
-  umgehen**, den Port daher niemals am Router weiterleiten.
+- Nur der App-Port steht in `.env` (`APP_PORT`) und wird von `docker-compose.yml`
+  veröffentlicht. Postgres hat **keinen Host-Port** und ist nur im Docker-Netz
+  über den Service-Namen `db` erreichbar (z. B. `docker compose exec db psql -U nfc -d nfc`).
+  Ein Host-Prozess (lokales `npm run dev`, DB-GUI) erreicht die DB daher nicht.
 - `.env` muss eine reguläre Datei sein (kein Symlink); der Installer ersetzt sie
   atomar. Zusätzliche, nicht vom Installer verwaltete Zeilen (z. B. `DEMO_MODE`)
   bleiben bei einer Rekonfiguration erhalten.
@@ -112,8 +111,8 @@ Hinweise:
 3. `.env` im selben Ordner ablegen. Ohne SSH gibt es keine Shell zum Erzeugen der
    Zufallswerte: `.env.example` kopieren und `SESSION_SECRET` (≥ 32 Zeichen),
    `POSTGRES_PASSWORD` (≥ 16) und `ADMIN_PASSWORD` (≥ 12) mit einem Passwortmanager
-   oder dem dokumentierten `node`-Befehl auf einem PC füllen. `APP_PORT`, `DB_BIND`
-   und `DB_PORT` sind optional (Defaults 3000 / `127.0.0.1` / 5432). Danach
+   oder dem dokumentierten `node`-Befehl auf einem PC füllen. `APP_PORT` ist
+   optional (Default 3000). Danach
    `chmod 600 .env` setzen. Alternativ den SSH-Schnellstart nutzen.
 4. Projekt starten. Beim ersten Start laufen Migration und Admin-Anlage automatisch.
 5. HTTPS-Reverse-Proxy einrichten (siehe unten).

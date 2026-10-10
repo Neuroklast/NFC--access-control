@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
+    # Kein Host-Port: die App erreicht die DB nur intern über den Service-Namen "db".
     environment:
       POSTGRES_USER: nfc
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD in .env setzen}
@@ -12,10 +13,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    ports:
-      # Bind-Adresse/Port über .env konfigurierbar (install.sh fragt danach).
-      # Default: nur lokal - die App erreicht die DB über das Docker-Netz.
-      - "${DB_BIND:-127.0.0.1}:${DB_PORT:-5432}:5432"
 
   app:
     # Fertiges Image von GitHub; auf der NAS: docker compose pull && docker compose up -d

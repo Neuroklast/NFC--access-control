@@ -9,8 +9,6 @@
 #   ADMIN_PASSWORD     Admin-Passwort (min. 12 Zeichen); leer = generieren
 #   SEED_DEMO          1 = Demo-Karten beim Start anlegen (Default 0)
 #   APP_PORT           Host-Port der App (Default 3000)
-#   DB_BIND            Bind-Adresse der DB (127.0.0.1 oder 0.0.0.0, Default 127.0.0.1)
-#   DB_PORT            Host-Port der DB (Default 5432)
 #   POSTGRES_PASSWORD  vorhandenes DB-Passwort beibehalten (sonst generieren)
 #   SESSION_SECRET     vorhandenes Session-Secret beibehalten (sonst generieren)
 #   ENV_FILE           Ziel-Datei (Default .env)
@@ -109,8 +107,6 @@ fi
 ADMIN_EMAIL="${ADMIN_EMAIL:-admin@club.local}"
 SEED_DEMO="${SEED_DEMO:-0}"
 APP_PORT="${APP_PORT:-3000}"
-DB_BIND="${DB_BIND:-127.0.0.1}"
-DB_PORT="${DB_PORT:-5432}"
 
 ADMIN_PASSWORD_GENERATED=0
 ADMIN_PASSWORD_IN="${ADMIN_PASSWORD:-}"
@@ -149,14 +145,6 @@ valid_base64url "$POSTGRES_PASSWORD" || { echo "[init-env] POSTGRES_PASSWORD dar
 valid_secret "$SESSION_SECRET" || { echo "[init-env] SESSION_SECRET enthaelt unerlaubte Zeichen." >&2; exit 1; }
 
 valid_port "$APP_PORT" || { echo "[init-env] APP_PORT muss zwischen 1 und 65535 liegen." >&2; exit 1; }
-valid_port "$DB_PORT" || { echo "[init-env] DB_PORT muss zwischen 1 und 65535 liegen." >&2; exit 1; }
-case "$DB_BIND" in
-  127.0.0.1|0.0.0.0) ;;
-  *)
-    echo "[init-env] DB_BIND muss 127.0.0.1 oder 0.0.0.0 sein." >&2
-    exit 1
-    ;;
-esac
 
 # Fail closed, falls eine Zufallsquelle nichts geliefert hat.
 [ "${#SESSION_SECRET}" -ge 32 ] || { echo "[init-env] SESSION_SECRET zu kurz - Zufallsquelle fehlgeschlagen." >&2; exit 1; }
@@ -164,6 +152,8 @@ esac
 [ "${#ADMIN_PASSWORD}" -ge 12 ] || { echo "[init-env] ADMIN_PASSWORD muss mindestens 12 Zeichen haben." >&2; exit 1; }
 
 # Zusaetzliche, nicht vom Installer verwaltete Schluessel erhalten (z. B. DEMO_MODE).
+# DB_BIND/DB_PORT werden nicht mehr geschrieben, stehen aber weiter in der
+# Ausschlussliste, damit ein Reconfigure sie aus alten .env-Dateien entfernt.
 _extras=""
 if [ -f "$ENV_FILE" ]; then
   _extras="$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$ENV_FILE" | grep -vE '^(DATABASE_URL|DIRECT_URL|SESSION_SECRET|ADMIN_EMAIL|ADMIN_PASSWORD|POSTGRES_PASSWORD|SEED_DEMO|APP_PORT|DB_BIND|DB_PORT)=' | tr -d '\r' || true)"
@@ -176,16 +166,14 @@ _tmp_env="$(mktemp "${ENV_FILE}.XXXXXX")" || { echo "[init-env] Temp-Datei konnt
 trap 'rm -f "$_tmp_env"' EXIT
 trap 'exit 130' INT TERM HUP
 cat > "$_tmp_env" <<EOF
-DATABASE_URL=postgresql://nfc:$POSTGRES_PASSWORD@localhost:$DB_PORT/nfc
-DIRECT_URL=postgresql://nfc:$POSTGRES_PASSWORD@localhost:$DB_PORT/nfc
+DATABASE_URL=postgresql://nfc:$POSTGRES_PASSWORD@localhost:5432/nfc
+DIRECT_URL=postgresql://nfc:$POSTGRES_PASSWORD@localhost:5432/nfc
 SESSION_SECRET=$SESSION_SECRET
 ADMIN_EMAIL=$ADMIN_EMAIL
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 SEED_DEMO=$SEED_DEMO
 APP_PORT=$APP_PORT
-DB_BIND=$DB_BIND
-DB_PORT=$DB_PORT
 EOF
 if [ -n "$_extras" ]; then
   printf '%s\n' "$_extras" >> "$_tmp_env"
