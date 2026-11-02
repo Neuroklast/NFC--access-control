@@ -23,7 +23,8 @@ Karten existieren nur in Postgres. Verwaltung kann Inhaber nicht anlegen, sperre
 - [ ] Given Foto ohne Upload, when Speichern, then Karte wird trotzdem angelegt (Foto optional).
 - [ ] Given großes Bild, when Upload, then Ergebnis ist WebP, längste Kante ≤ 512 px, ≤ 200 KB.
 - [ ] Given falsches aktuelles Passwort, when Passwort ändern, then 403, keine Änderung.
-- [ ] Given Passwort ≥ 12 Zeichen, when ändern, then 204 und neuer Login funktioniert.
+- [ ] Given Passwort ≥ 12 Zeichen und ≤ 72 UTF-8-Bytes, when ändern, then 204 und neuer Login funktioniert. Längere neue Passwörter werden mit 422 abgelehnt, statt von bcrypt still gekürzt zu werden.
+- [ ] Given mehr als fünf Passwortversuche innerhalb von 15 Minuten für ein Admin-Konto, when ändern, then 429 mit `Retry-After`. Login und Kartenprüfung liefern beim jeweiligen Rate-Limit ebenfalls `Retry-After`.
 - [ ] Denied path: Scanner-Session darf Admin-APIs nicht aufrufen (kein Cookie → 401).
 - [ ] Empty/error: Netzwerkfehler an Formular + Retry; kein Silent Fail.
 - [ ] Login: `autocomplete="username"` / `current-password`; Submit-Pending sichtbar; Inputs nicht `disabled` während Submit.

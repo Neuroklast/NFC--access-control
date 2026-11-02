@@ -13,6 +13,7 @@ type ScanStatus =
   | { kind: "idle" }
   | { kind: "scanning" }
   | { kind: "qr" }
+  | { kind: "verifying" }
   | {
       kind: "granted";
       firstName: string;
@@ -72,22 +73,31 @@ export function ScannerScreen() {
     qrScannerRef.current = null;
   }, []);
 
+  const cancelVerification = useCallback(() => {
+    verifySeq.current += 1;
+    verifyAbortRef.current?.abort();
+    verifyAbortRef.current = null;
+    clearReset();
+  }, []);
+
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
-      verifyAbortRef.current?.abort();
+      cancelVerification();
       stopQr();
-      clearReset();
     };
-  }, [stopQr]);
+  }, [cancelVerification, stopQr]);
 
   const verifyUid = useCallback(
     async (cardUid: string) => {
+      cancelVerification();
+      abortRef.current?.abort();
+      stopQr();
       if (!navigator.onLine) {
         setStatus({ kind: "offline" });
         return;
       }
-      verifyAbortRef.current?.abort();
+      setStatus({ kind: "verifying" });
       const controller = new AbortController();
       verifyAbortRef.current = controller;
       const seq = ++verifySeq.current;
@@ -110,6 +120,7 @@ export function ScannerScreen() {
             role?: string;
             photo_url?: string | null;
           };
+          if (seq !== verifySeq.current) return;
           if (body.granted && body.first_name && body.last_name && body.role) {
             setStatus({
               kind: "granted",
@@ -148,10 +159,11 @@ export function ScannerScreen() {
         }
       }
     },
-    [scheduleReset],
+    [cancelVerification, scheduleReset, stopQr],
   );
 
   const startNfc = useCallback(async () => {
+    cancelVerification();
     stopQr();
     if (!nfcSupported() || !window.NDEFReader) {
       setStatus({
@@ -169,6 +181,7 @@ export function ScannerScreen() {
     try {
       const reader = new window.NDEFReader();
       reader.addEventListener("reading", (event) => {
+        if (controller.signal.aborted) return;
         const uid = extractCardUid(event);
         if (!uid) {
           setStatus({ kind: "error", message: "Karte konnte nicht gelesen werden." });
@@ -177,10 +190,12 @@ export function ScannerScreen() {
         void verifyUid(uid);
       });
       reader.addEventListener("readingerror", () => {
+        if (controller.signal.aborted) return;
         setStatus({ kind: "error", message: "Karte konnte nicht gelesen werden." });
       });
       await reader.scan({ signal: controller.signal });
     } catch (error) {
+      if (controller.signal.aborted) return;
       if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
@@ -189,13 +204,15 @@ export function ScannerScreen() {
         message: "NFC konnte nicht gestartet werden. Bitte Berechtigung und HTTPS prüfen.",
       });
     }
-  }, [stopQr, verifyUid]);
+  }, [cancelVerification, stopQr, verifyUid]);
 
   const startQr = useCallback(() => {
+    if (status.kind === "qr") return;
+    cancelVerification();
     abortRef.current?.abort();
     stopQr();
     setStatus({ kind: "qr" });
-  }, [stopQr]);
+  }, [cancelVerification, status.kind, stopQr]);
 
   useEffect(() => {
     if (status.kind !== "qr") {
@@ -216,8 +233,8 @@ export function ScannerScreen() {
         const scanner = new QrScanner(
           video,
           (result) => {
+            if (cancelled || !qrScannerRef.current) return;
             void verifyUid(result.data.trim());
-            stopQr();
           },
           {
             onDecodeError: () => {
@@ -234,6 +251,7 @@ export function ScannerScreen() {
         await scanner.start();
       } catch {
         if (!cancelled) {
+          stopQr();
           setStatus({
             kind: "error",
             message: window.isSecureContext
@@ -251,15 +269,16 @@ export function ScannerScreen() {
   }, [status.kind, stopQr, verifyUid]);
 
   const resetNow = () => {
-    verifySeq.current += 1;
-    verifyAbortRef.current?.abort();
-    clearReset();
+    cancelVerification();
+    abortRef.current?.abort();
+    stopQr();
     setStatus({ kind: "idle" });
   };
 
   const submitManual = (event: React.FormEvent) => {
     event.preventDefault();
     const uid = manualUid.trim();
+    if (status.kind === "verifying") return;
     if (!uid) {
       setManualError("Bitte eine UID eingeben.");
       return;
@@ -271,13 +290,13 @@ export function ScannerScreen() {
   const result = status.kind === "granted" || status.kind === "denied";
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-background text-foreground">
+    <div className="flex min-h-full flex-col bg-background text-foreground">
       {result ? (
         <div
           className={
             status.kind === "granted"
-              ? "flex h-full flex-col items-center justify-center gap-4 overflow-hidden bg-grant px-6 py-6 text-grant-foreground"
-              : "flex h-full flex-col items-center justify-center gap-4 overflow-hidden bg-destructive px-6 py-6 text-white"
+              ? "flex min-h-full flex-1 flex-col items-center justify-center gap-4 bg-grant px-6 py-6 text-grant-foreground"
+              : "flex min-h-full flex-1 flex-col items-center justify-center gap-4 bg-destructive px-6 py-6 text-white"
           }
           role="status"
           aria-live="assertive"
@@ -313,7 +332,7 @@ export function ScannerScreen() {
           </Button>
         </div>
       ) : (
-        <main className="mx-auto flex h-full w-full max-w-md flex-col gap-4 px-6 py-6">
+        <main className="mx-auto flex min-h-full w-full max-w-md flex-1 flex-col gap-4 px-6 py-6">
           <div className="flex shrink-0 flex-col gap-1">
             <Image
               src="/brand/frc-logo-light.png"
@@ -323,8 +342,10 @@ export function ScannerScreen() {
               priority
             />
             <h1 className="font-heading text-2xl font-semibold tracking-tight">{BRAND.app}</h1>
-            <p className="text-sm text-muted-foreground">
-              {status.kind === "scanning"
+            <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+              {status.kind === "verifying"
+                ? "Karte wird geprüft…"
+                : status.kind === "scanning"
                 ? "Karte auflegen…"
                 : status.kind === "qr"
                   ? "QR-Code erfassen"
@@ -389,10 +410,11 @@ export function ScannerScreen() {
                     autoComplete="off"
                     autoFocus
                     aria-invalid={Boolean(manualError)}
+                    aria-describedby={manualError ? "manual-uid-error" : undefined}
                   />
-                  <FieldError errors={manualError ? [{ message: manualError }] : undefined} />
+                  <FieldError id="manual-uid-error" errors={manualError ? [{ message: manualError }] : undefined} />
                 </Field>
-                <Button type="submit" variant="secondary" className="min-h-11">
+                <Button type="submit" variant="secondary" className="min-h-11" disabled={status.kind === "verifying"}>
                   Prüfen
                 </Button>
               </FieldGroup>

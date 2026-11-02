@@ -2,7 +2,7 @@ import { verifyPassword } from "@/lib/auth/password";
 import { clearSessionCookie, getSession, setSessionCookie } from "@/lib/auth/session";
 import { loginBodySchema } from "@/lib/cardholders/schema";
 import { BodyTooLargeError, readJsonBody } from "@/lib/http/body";
-import { clientIp, problemResponse } from "@/lib/http/problem";
+import { clientIp, problemResponse, rateLimitResponse } from "@/lib/http/problem";
 import { rateLimit } from "@/lib/http/rate-limit";
 import { getStore } from "@/lib/store";
 
@@ -25,7 +25,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const limited = rateLimit(`login:${clientIp(request)}`, 5, 15 * 60_000);
   if (!limited.ok) {
-    return problemResponse(429, "Too many requests", "Zu viele Anmeldeversuche.", INSTANCE);
+    return rateLimitResponse("Zu viele Anmeldeversuche.", INSTANCE, limited.retryAfter);
   }
 
   let json: unknown;

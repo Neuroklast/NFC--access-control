@@ -24,6 +24,15 @@ Vorbereitung: Admin eingeloggt, drei Karten im Bestand: **aktiv**, **gesperrt** 
 | 14 | Admin: Sperren | Karte sperren → am Einlass scannen | Rot |
 | 15 | Admin: Foto | Foto hochladen → scannen | Foto erscheint |
 
+## Ergänzende Regressionen
+
+- Während einer langsamen Prüfung die Scan-Methode wechseln. Die alte Antwort darf keinen Ergebnis-Screen öffnen.
+- Im QR-Modus erneut „QR-Code scannen“ wählen. Die Kamera läuft weiter.
+- Nach einem NFC-Ergebnis dieselbe Karte liegen lassen. Es darf keine weitere Prüfung im Hintergrund starten.
+- Karte mit ungültiger Bilddatei anlegen. Die Karte bleibt gespeichert und das Foto kann im Bearbeiten erneut hochgeladen werden.
+- Windows-Backup mit gestopptem DB-Container starten. Exitcode muss ungleich null sein, es darf keine fertige `.sql.gz` entstehen.
+- Docker mit `SEED_DEMO=1` frisch starten. Beide Demo-Karten müssen verfügbar sein.
+
 ## Bekannte Grenzen
 
 - Web NFC nur Android Chrome. iOS hat kein Web NFC → QR ist der iOS-Weg.

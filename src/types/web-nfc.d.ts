@@ -1,5 +1,7 @@
 interface NDEFRecord {
   recordType: string;
+  encoding?: string;
+  lang?: string;
   data?: BufferSource;
 }
 

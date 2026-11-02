@@ -31,10 +31,16 @@ node scripts/generate-demo-qr.mjs
 node scripts/verify-demo-qr.mjs
 ```
 
+NDEF-Text wird aus dem bereits vom Browser dekodierten Payload gelesen. Die separate
+Encoding-Angabe des Web-NFC-Datensatzes wird berücksichtigt.
+
 ## Bedienung am Scanner
 
-- Ergebnis-Screen (grün/rot) hat **„Weiter scannen"** zum sofortigen Zurücksetzen.
+- Ergebnis-Screen (grün/rot) hat **„Nächste Prüfung"** zum sofortigen Zurücksetzen.
 - Ohne Tippen springt der Scanner nach 5 Sekunden zurück.
+- Während der Serverprüfung erscheint „Karte wird geprüft…“. Ein Wechsel der Scan-Methode
+  verwirft die vorherige Prüfung. Jeder NFC-Start liest eine Karte. Für die nächste Karte
+  nach dem Ergebnis erneut „NFC scannen“ wählen.
 - Abgelehnte Scans zeigen nie einen Namen.
 - Desktop-Tests: UID in „Karten-UID manuell" eintippen.
 

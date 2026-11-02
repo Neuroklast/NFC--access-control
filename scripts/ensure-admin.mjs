@@ -12,17 +12,17 @@ if (!email || !password) {
   process.exit(0);
 }
 
-if (password.length < 12) {
-  console.error("[ensure-admin] ADMIN_PASSWORD muss mindestens 12 Zeichen haben");
-  await prisma.$disconnect();
-  process.exit(1);
-}
-
 const existing = await prisma.adminUser.findFirst({ select: { id: true } });
 if (existing) {
   console.log("[ensure-admin] Admin existiert bereits - uebersprungen");
   await prisma.$disconnect();
   process.exit(0);
+}
+
+if (password.length < 12 || Buffer.byteLength(password, "utf8") > 72) {
+  console.error("[ensure-admin] ADMIN_PASSWORD muss mindestens 12 Zeichen und hoechstens 72 UTF-8-Bytes haben");
+  await prisma.$disconnect();
+  process.exit(1);
 }
 
 const passwordHash = await bcrypt.hash(password, 12);
