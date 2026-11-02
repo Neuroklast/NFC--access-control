@@ -1,5 +1,5 @@
 import { BodyTooLargeError, readJsonBody } from "@/lib/http/body";
-import { clientIp, problemResponse } from "@/lib/http/problem";
+import { clientIp, problemResponse, rateLimitResponse } from "@/lib/http/problem";
 import { rateLimit } from "@/lib/http/rate-limit";
 import { verifyCardBodySchema } from "@/lib/cardholders/schema";
 import { createPhotoToken } from "@/lib/photos/token";
@@ -14,7 +14,7 @@ const INSTANCE = "/api/v1/card-verifications";
 export async function POST(request: Request) {
   const limited = rateLimit(`verify:${clientIp(request)}`, 30, 60_000);
   if (!limited.ok) {
-    return problemResponse(429, "Too many requests", "Bitte kurz warten.", INSTANCE);
+    return rateLimitResponse("Bitte kurz warten.", INSTANCE, limited.retryAfter);
   }
 
   let json: unknown;

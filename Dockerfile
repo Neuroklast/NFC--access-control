@@ -20,8 +20,9 @@ RUN npx prisma generate && npm run build
 FROM node:22-alpine AS prisma-cli
 WORKDIR /app
 COPY package-lock.json ./
+COPY package.json ./project-package.json
 RUN v="$(node -p "require('./package-lock.json').packages['node_modules/prisma'].version")" \
- && printf '%s\n' '{"name":"prisma-cli","private":true}' > package.json \
+ && node -e "const fs = require('node:fs'); const source = require('./project-package.json'); fs.writeFileSync('package.json', JSON.stringify({ name: 'prisma-cli', private: true, overrides: source.overrides }));" \
  && npm install --no-save --no-audit --no-fund "prisma@$v"
 
 FROM node:22-alpine AS runner
@@ -42,4 +43,4 @@ COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY --from=prisma-cli /app/node_modules ./node_modules
 USER nextjs
 EXPOSE 3000
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node scripts/ensure-admin.mjs && node server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node scripts/ensure-admin.mjs && node scripts/seed-demo.mjs && node server.js"]

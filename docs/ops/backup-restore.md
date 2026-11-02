@@ -16,7 +16,10 @@ Linux/NAS/macOS:
 sh scripts/backup.sh
 ```
 
-Ergebnis: `backups/nfc-YYYYMMDD-HHMMSS.sql.gz`, Retention `RETENTION_DAYS` (Default 14).
+Ergebnis: `backups/nfc-YYYYMMDD-HHMMSS.sql.gz`, unter Windows zusätzlich mit Millisekunden.
+Retention `RETENTION_DAYS` (Default 14). Windows benötigt PowerShell und `gzip` im PATH.
+Ein fehlgeschlagener oder leerer Datenbank-Dump wird abgelehnt. Die fertige `.gz`-Datei
+wird erst nach erfolgreicher Komprimierung abgelegt.
 
 ### Automatisieren
 

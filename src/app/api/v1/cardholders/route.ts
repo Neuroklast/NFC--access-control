@@ -19,7 +19,7 @@ export async function GET() {
   return Response.json({
     items: rows.map(serializeCardholder),
     next_cursor: null,
-  });
+  }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     });
     return Response.json(serializeCardholder(created), {
       status: 201,
-      headers: { Location: `/api/v1/cardholders/${created.id}` },
+      headers: { Location: `/api/v1/cardholders/${created.id}`, "Cache-Control": "no-store" },
     });
   } catch (error) {
     if (error instanceof ConflictError) {

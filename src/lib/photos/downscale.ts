@@ -3,19 +3,19 @@ const QUALITY = 0.85;
 
 export async function downscaleImage(file: File): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
-
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Canvas nicht verfügbar");
+  try {
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Canvas nicht verfügbar");
+    }
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  } finally {
+    bitmap.close();
   }
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(

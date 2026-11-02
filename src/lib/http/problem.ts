@@ -16,9 +16,18 @@ export function problemResponse(
     },
     {
       status,
-      headers: { "Content-Type": "application/problem+json" },
+      headers: {
+        "Content-Type": "application/problem+json",
+        "Cache-Control": "no-store",
+      },
     },
   );
+}
+
+export function rateLimitResponse(detail: string, instance: string, retryAfter: number): Response {
+  const response = problemResponse(429, "Too many requests", detail, instance);
+  response.headers.set("Retry-After", String(retryAfter));
+  return response;
 }
 
 export function clientIp(request: Request): string {

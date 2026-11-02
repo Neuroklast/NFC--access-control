@@ -2,7 +2,7 @@ import { verifyPassword } from "@/lib/auth/password";
 import { clearSessionCookie, getSession, setSessionCookie } from "@/lib/auth/session";
 import { loginBodySchema } from "@/lib/cardholders/schema";
 import { BodyTooLargeError, readJsonBody } from "@/lib/http/body";
-import { clientIp, problemResponse } from "@/lib/http/problem";
+import { clientIp, problemResponse, rateLimitResponse } from "@/lib/http/problem";
 import { rateLimit } from "@/lib/http/rate-limit";
 import { getStore } from "@/lib/store";
 
@@ -17,15 +17,15 @@ const DUMMY_PASSWORD_HASH = "$2b$12$iLfjTtSs6evPja77icl6xeExtr1rLY6.P8Eo8qaBk3vD
 export async function GET() {
   const session = await getSession();
   if (!session) {
-    return new Response(null, { status: 401 });
+    return new Response(null, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
-  return Response.json({ email: session.email });
+  return Response.json({ email: session.email }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {
   const limited = rateLimit(`login:${clientIp(request)}`, 5, 15 * 60_000);
   if (!limited.ok) {
-    return problemResponse(429, "Too many requests", "Zu viele Anmeldeversuche.", INSTANCE);
+    return rateLimitResponse("Zu viele Anmeldeversuche.", INSTANCE, limited.retryAfter);
   }
 
   let json: unknown;
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   }
 
   await setSessionCookie({ sub: admin.id, email: admin.email, sv: admin.sessionVersion });
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 }
 
 export async function DELETE() {
@@ -59,5 +59,5 @@ export async function DELETE() {
     await getStore().bumpSessionVersion(session.sub);
   }
   await clearSessionCookie();
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 }

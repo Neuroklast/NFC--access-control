@@ -1,5 +1,6 @@
 export type NdefRecordLike = {
   recordType?: string;
+  encoding?: string;
   data?: BufferSource | string;
 };
 
@@ -18,25 +19,17 @@ function decodeUtf8(bytes: Uint8Array): string {
   return new TextDecoder("utf-8").decode(bytes).replace(/^\uFEFF/, "").trim();
 }
 
-// NDEF Text record: [status byte][language code][text].
-// status & 0x80 -> UTF-16, status & 0x3f -> language code length.
-function decodeTextRecord(data: BufferSource | string | undefined): string {
-  if (!data) {
+// Web NFC exposes the text payload only. Status/language bytes have already
+// been parsed by the browser and the encoding is provided separately.
+function decodeTextRecord(record: NdefRecordLike): string {
+  if (!record.data) return "";
+  if (typeof record.data === "string") return record.data.trim();
+  try {
+    return new TextDecoder(record.encoding || "utf-8", { fatal: true })
+      .decode(toBytes(record.data)).replace(/^\uFEFF/, "").trim();
+  } catch {
     return "";
   }
-  if (typeof data === "string") {
-    return data.trim();
-  }
-  const bytes = toBytes(data);
-  if (bytes.length === 0) {
-    return "";
-  }
-  const status = bytes[0] ?? 0;
-  const languageLength = status & 0x3f;
-  const isUtf16 = (status & 0x80) !== 0;
-  const textBytes = bytes.slice(1 + languageLength);
-  const decoder = new TextDecoder(isUtf16 ? "utf-16le" : "utf-8");
-  return decoder.decode(textBytes).replace(/^\uFEFF/, "").trim();
 }
 
 function decodeUrlRecord(data: BufferSource | string | undefined): string {
@@ -59,7 +52,7 @@ export function extractCardUid(reading: NfcReadingLike): string | null {
     const type = record.recordType?.toLowerCase();
     let text = "";
     if (type === "text") {
-      text = decodeTextRecord(record.data);
+      text = decodeTextRecord(record);
     } else if (type === "url" || type === "absolute-url") {
       text = decodeUrlRecord(record.data);
     }

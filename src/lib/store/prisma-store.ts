@@ -146,8 +146,19 @@ export function createPrismaStore(): Store {
       });
     },
 
-    async updateAdminPassword(id: string, passwordHash: string): Promise<void> {
-      await prisma.adminUser.update({ where: { id }, data: { passwordHash } });
+    async rotateAdminPassword(
+      id: string,
+      expectedPasswordHash: string,
+      expectedSessionVersion: number,
+      passwordHash: string,
+    ): Promise<number | null> {
+      // One conditional write replaces the password and revokes old sessions.
+      // A concurrent password change or logout makes this update a no-op.
+      const changed = await prisma.adminUser.updateMany({
+        where: { id, passwordHash: expectedPasswordHash, sessionVersion: expectedSessionVersion },
+        data: { passwordHash, sessionVersion: { increment: 1 } },
+      });
+      return changed.count === 1 ? expectedSessionVersion + 1 : null;
     },
 
     async bumpSessionVersion(id: string): Promise<number | null> {

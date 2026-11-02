@@ -109,7 +109,7 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
             className="pl-8"
           />
         </div>
-        <Button render={<Link href="/admin/cardholders/new" />} className="min-h-11">
+        <Button nativeButton={false} render={<Link href="/admin/cardholders/new" />} className="min-h-11">
           <PlusIcon data-icon="inline-start" />
           Karte anlegen
         </Button>
@@ -127,7 +127,7 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
           </EmptyHeader>
           {items.length === 0 ? (
             <EmptyContent>
-              <Button render={<Link href="/admin/cardholders/new" />}>Karte anlegen</Button>
+              <Button nativeButton={false} render={<Link href="/admin/cardholders/new" />}>Karte anlegen</Button>
             </EmptyContent>
           ) : null}
         </Empty>
@@ -179,7 +179,7 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
                         <Button
                           variant="outline"
                           size="sm"
-                          render={<Link href={`/admin/cardholders/${row.id}`} />}
+                          nativeButton={false} render={<Link href={`/admin/cardholders/${row.id}`} />}
                         >
                           Bearbeiten
                         </Button>
@@ -222,7 +222,7 @@ export function CardholderList({ items }: { items: CardholderRow[] }) {
                   <Button
                     className="flex-1"
                     variant="outline"
-                    render={<Link href={`/admin/cardholders/${row.id}`} />}
+                    nativeButton={false} render={<Link href={`/admin/cardholders/${row.id}`} />}
                   >
                     Bearbeiten
                   </Button>

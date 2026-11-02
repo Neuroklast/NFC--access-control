@@ -21,6 +21,10 @@ export function PasswordForm() {
       setError("Neues Passwort braucht mindestens 12 Zeichen.");
       return;
     }
+    if (new TextEncoder().encode(newPassword).length > 72) {
+      setError("Neues Passwort darf höchstens 72 UTF-8-Bytes lang sein. Umlaute benötigen mehrere Bytes.");
+      return;
+    }
     setPending(true);
     setError(null);
     try {
@@ -39,6 +43,14 @@ export function PasswordForm() {
       }
       if (response.status === 403) {
         setError("Aktuelles Passwort ist falsch.");
+        return;
+      }
+      if (response.status === 409 || response.status === 401) {
+        setError("Die Anmeldung oder das Passwort wurde zwischenzeitlich geändert. Bitte erneut anmelden.");
+        return;
+      }
+      if (response.status === 429) {
+        setError("Zu viele Versuche. Bitte kurz warten.");
         return;
       }
       setError("Ändern fehlgeschlagen.");

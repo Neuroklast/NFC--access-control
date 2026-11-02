@@ -78,7 +78,15 @@ export function CardholderForm({
       });
       if (response.status === 201 || response.status === 200) {
         const saved = (await response.json()) as { id: string };
-        if (file && !(await uploadPhoto(saved.id, file))) {
+        let photoSaved = true;
+        if (file) {
+          try {
+            photoSaved = await uploadPhoto(saved.id, file);
+          } catch {
+            photoSaved = false;
+          }
+        }
+        if (!photoSaved) {
           toast.error("Karte gespeichert, aber das Foto fehlte. Bitte erneut hochladen.");
           if (id) {
             setError("Das Foto konnte nicht gespeichert werden. Bitte erneut hochladen.");
