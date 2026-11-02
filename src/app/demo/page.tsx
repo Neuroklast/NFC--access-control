@@ -70,7 +70,7 @@ export default async function DemoPage() {
         </p>
       </div>
 
-      <Button variant="outline" render={<Link href="/" />} className="self-start">
+      <Button variant="outline" nativeButton={false} render={<Link href="/" />} className="self-start">
         Zum Scanner
       </Button>
     </main>

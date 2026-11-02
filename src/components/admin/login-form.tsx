@@ -14,6 +14,7 @@ export function LoginForm({ from }: { from: string }) {
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     const email = String(data.get("email") ?? "");
@@ -31,7 +32,13 @@ export function LoginForm({ from }: { from: string }) {
         router.refresh();
         return;
       }
-      setError("E-Mail oder Passwort ungültig");
+      if (response.status === 429) {
+        setError("Zu viele Anmeldeversuche. Bitte später erneut versuchen.");
+      } else if (response.status >= 500) {
+        setError("Anmeldung derzeit nicht verfügbar. Bitte erneut versuchen.");
+      } else {
+        setError("E-Mail oder Passwort ungültig");
+      }
     } catch {
       setError("Keine Verbindung zum Server");
     } finally {

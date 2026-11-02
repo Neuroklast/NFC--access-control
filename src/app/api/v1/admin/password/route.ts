@@ -52,7 +52,7 @@ export async function PATCH(request: Request) {
   }
 
   const admin = await getStore().findAdminById(session.sub);
-  if (!admin) {
+  if (!admin || admin.sessionVersion !== session.sv) {
     return problemResponse(401, "Unauthorized", "Anmeldung erforderlich.", INSTANCE);
   }
 
@@ -62,11 +62,16 @@ export async function PATCH(request: Request) {
   }
 
   const passwordHash = await hashPassword(parsed.data.new_password);
-  await getStore().updateAdminPassword(admin.id, passwordHash);
-  const sv = await getStore().bumpSessionVersion(admin.id);
-  if (sv !== null) {
-    await setSessionCookie({ sub: admin.id, email: admin.email, sv });
+  const sv = await getStore().rotateAdminPassword(
+    admin.id,
+    admin.passwordHash,
+    session.sv,
+    passwordHash,
+  );
+  if (sv === null) {
+    return problemResponse(409, "Conflict", "Die Anmeldung wurde zwischenzeitlich geändert. Bitte erneut anmelden.", INSTANCE);
   }
+  await setSessionCookie({ sub: admin.id, email: admin.email, sv });
 
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 }

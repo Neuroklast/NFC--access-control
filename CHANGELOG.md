@@ -4,6 +4,14 @@
 
 ### Fixed
 
+- Admin: keep logout and deletion on the current screen when requests fail, prevent duplicate in-flight actions, reset destructive confirmations, and distinguish login throttling/server errors from invalid credentials.
+- Password rotation: update the password hash and revoke existing sessions in one conditional database write. Concurrent changes and stale sessions cannot overwrite newer credentials.
+- Private API responses: prevent caching successful session and cardholder responses.
+- Photos: preserve a one-pixel minimum edge for very wide/tall images and release decoded image resources on canvas failures.
+- Navigation: declare link-backed Base UI buttons as non-native buttons.
+- Build: bundle existing font families through Fontsource so CI builds do not depend on Google font query generation or downloads.
+- Dependencies: update Next.js to 16.4.3 and refresh compatible packages, including Vitest and Zod. Apply the patched deepmerge-ts version to Prisma configuration tooling, including its Docker CLI stage.
+
 - Scanner: cancel obsolete verifications when changing methods, going offline or unmounting. Ignore late response bodies and old NFC events. Show verification progress and keep repeated QR-start clicks from stopping the camera.
 - Scanner: allow content to grow on small displays and associate manual UID errors with their input.
 - NFC: decode the browser-provided text payload using the record encoding instead of stripping an NDEF header a second time.

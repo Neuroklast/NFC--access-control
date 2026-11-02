@@ -27,7 +27,7 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!row) {
     return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
   }
-  return Response.json(serializeCardholder(row));
+  return Response.json(serializeCardholder(row), { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -67,7 +67,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!updated) {
       return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
     }
-    return Response.json(serializeCardholder(updated));
+    return Response.json(serializeCardholder(updated), { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof ConflictError) {
       return problemResponse(409, "Conflict", "Diese Karten-UID existiert bereits.", instance(id));
@@ -90,5 +90,5 @@ export async function DELETE(_request: Request, context: RouteContext) {
   if (!deleted) {
     return problemResponse(404, "Not found", "Karte nicht gefunden.", instance(id));
   }
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 }

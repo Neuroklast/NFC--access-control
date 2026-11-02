@@ -17,9 +17,9 @@ const DUMMY_PASSWORD_HASH = "$2b$12$iLfjTtSs6evPja77icl6xeExtr1rLY6.P8Eo8qaBk3vD
 export async function GET() {
   const session = await getSession();
   if (!session) {
-    return new Response(null, { status: 401 });
+    return new Response(null, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
-  return Response.json({ email: session.email });
+  return Response.json({ email: session.email }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   }
 
   await setSessionCookie({ sub: admin.id, email: admin.email, sv: admin.sessionVersion });
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 }
 
 export async function DELETE() {
@@ -59,5 +59,5 @@ export async function DELETE() {
     await getStore().bumpSessionVersion(session.sub);
   }
   await clearSessionCookie();
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 }

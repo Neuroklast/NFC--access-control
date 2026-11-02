@@ -60,7 +60,12 @@ export interface Store {
   clearCardholderPhoto(id: string): Promise<boolean>;
   findAdminByEmail(email: string): Promise<AdminRecord | null>;
   findAdminById(id: string): Promise<AdminRecord | null>;
-  updateAdminPassword(id: string, passwordHash: string): Promise<void>;
+  rotateAdminPassword(
+    id: string,
+    expectedPasswordHash: string,
+    expectedSessionVersion: number,
+    passwordHash: string,
+  ): Promise<number | null>;
   bumpSessionVersion(id: string): Promise<number | null>;
   countAdmins(): Promise<number>;
 }

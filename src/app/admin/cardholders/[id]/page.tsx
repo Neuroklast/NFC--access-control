@@ -34,7 +34,7 @@ export default async function EditCardholderPage({
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-6 py-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="font-heading text-2xl font-semibold">Karte bearbeiten</h1>
-          <Button variant="outline" render={<Link href="/admin/cardholders" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href="/admin/cardholders" />}>
             Zurück
           </Button>
         </div>

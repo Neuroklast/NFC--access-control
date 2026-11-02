@@ -226,12 +226,20 @@ export function createMemoryStore(): Store {
       return store.admins.get(id) ?? null;
     },
 
-    async updateAdminPassword(id: string, passwordHash: string): Promise<void> {
+    async rotateAdminPassword(
+      id: string,
+      expectedPasswordHash: string,
+      expectedSessionVersion: number,
+      passwordHash: string,
+    ): Promise<number | null> {
       const store = await ready();
       const admin = store.admins.get(id);
-      if (admin) {
-        store.admins.set(id, { ...admin, passwordHash });
+      if (!admin || admin.passwordHash !== expectedPasswordHash || admin.sessionVersion !== expectedSessionVersion) {
+        return null;
       }
+      const sessionVersion = admin.sessionVersion + 1;
+      store.admins.set(id, { ...admin, passwordHash, sessionVersion });
+      return sessionVersion;
     },
 
     async bumpSessionVersion(id: string): Promise<number | null> {

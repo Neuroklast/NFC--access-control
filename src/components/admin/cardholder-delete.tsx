@@ -27,29 +27,38 @@ export function CardholderDelete({
   lastName: string;
 }) {
   const router = useRouter();
+  const [pending, setPending] = useState(false);
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
 
   async function confirmDelete() {
-    const response = await fetch(`/api/v1/cardholders/${id}`, { method: "DELETE" });
-    if (response.status === 204) {
-      toast.success("Karte gelöscht");
-      setOpen(false);
-      router.push("/admin/cardholders");
-      router.refresh();
-      return;
+    if (!matches || pending) return;
+    setPending(true);
+    try {
+      const response = await fetch(`/api/v1/cardholders/${id}`, { method: "DELETE" });
+      if (response.status === 204) {
+        toast.success("Karte gelöscht");
+        setOpen(false);
+        router.push("/admin/cardholders");
+        router.refresh();
+        return;
+      }
+      toast.error("Löschen fehlgeschlagen. Bitte erneut versuchen.");
+    } catch {
+      toast.error("Keine Verbindung zum Server. Löschen bitte erneut versuchen.");
+    } finally {
+      setPending(false);
     }
-    toast.error("Löschen fehlgeschlagen");
   }
 
   const matches = confirmText.trim().toLowerCase() === lastName.trim().toLowerCase();
 
   return (
     <>
-      <Button variant="destructive" onClick={() => setOpen(true)}>
+      <Button variant="destructive" onClick={() => { setConfirmText(""); setOpen(true); }}>
         Endgültig löschen
       </Button>
-      <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialog open={open} onOpenChange={(nextOpen) => { if (!pending) setOpen(nextOpen); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Karte löschen?</AlertDialogTitle>
@@ -71,10 +80,10 @@ export function CardholderDelete({
             </Field>
           </FieldGroup>
           <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel disabled={pending}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={!matches}
+              disabled={!matches || pending}
               onClick={() => void confirmDelete()}
             >
               Löschen

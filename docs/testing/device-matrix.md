@@ -33,6 +33,11 @@ Vorbereitung: Admin eingeloggt, drei Karten im Bestand: **aktiv**, **gesperrt** 
 - Windows-Backup mit gestopptem DB-Container starten. Exitcode muss ungleich null sein, es darf keine fertige `.sql.gz` entstehen.
 - Docker mit `SEED_DEMO=1` frisch starten. Beide Demo-Karten müssen verfügbar sein.
 
+- Admin-Abmeldung und Kartenlöschung bei Netzwerkfehler wiederholen. Kein Erfolgszustand und keine Navigation bei fehlgeschlagenem Request.
+- Zwei Passwortänderungen mit denselben alten Zugangsdaten gleichzeitig senden. Genau eine darf erfolgreich sein, die andere wird abgelehnt.
+- Private Karten- und Session-Antworten auf `Cache-Control: no-store` prüfen.
+- Sehr breites/schmales Foto hochladen. Die Konvertierung behält mindestens einen Pixel pro Achse.
+
 ## Bekannte Grenzen
 
 - Web NFC nur Android Chrome. iOS hat kein Web NFC → QR ist der iOS-Weg.

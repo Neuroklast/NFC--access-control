@@ -45,6 +45,10 @@ export function PasswordForm() {
         setError("Aktuelles Passwort ist falsch.");
         return;
       }
+      if (response.status === 409 || response.status === 401) {
+        setError("Die Anmeldung oder das Passwort wurde zwischenzeitlich geändert. Bitte erneut anmelden.");
+        return;
+      }
       if (response.status === 429) {
         setError("Zu viele Versuche. Bitte kurz warten.");
         return;
